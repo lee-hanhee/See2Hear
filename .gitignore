@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Xcode local build products and user settings
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.DS_Store
