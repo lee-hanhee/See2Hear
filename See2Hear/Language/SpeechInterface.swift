@@ -1,4 +1,3 @@
-import AVFoundation
 import Foundation
 import MLXLLM
 import MLXLMCommon
@@ -100,21 +99,21 @@ final class SpeechInterface: SpeechInterfacing {
     }
 
     private func classifyWithLLM(_ transcript: String) async throws -> SignQuery? {
-        if modelContainer == nil {
-            modelContainer = try await loadModelContainer(id: modelID)
+        let container: ModelContainer
+        if let existing = modelContainer {
+            container = existing
+        } else {
+            let loaded = try await loadModelContainer(id: modelID)
+            modelContainer = loaded
+            container = loaded
         }
+
         let session = ChatSession(
-            modelContainer!,
+            container,
             instructions: Self.llmInstructions,
             generateParameters: GenerateParameters(maxTokens: 8, temperature: 0.0)
         )
         let reply = try await session.respond(to: transcript)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-
-        guard reply != "none", case .matched(let query) = parseQuery(reply) else {
-            return nil
-        }
-        return query
+        return parseLLMReply(reply)
     }
 }

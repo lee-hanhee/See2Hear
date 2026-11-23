@@ -19,6 +19,7 @@ final class ListenSession: @unchecked Sendable {
     private let recognizer: SFSpeechRecognizer
     private let audioEngine = AVAudioEngine()
     private let request = SFSpeechAudioBufferRecognitionRequest()
+    private let lock = NSLock()
 
     private var recognitionTask: SFSpeechRecognitionTask?
     private var silenceTimerTask: Task<Void, Never>?
@@ -38,25 +39,39 @@ final class ListenSession: @unchecked Sendable {
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-        await MainActor.run {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        }
-
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [request] buffer, _ in
             request.append(buffer)
         }
 
-        audioEngine.prepare()
-        try audioEngine.start()
+        do {
+            audioEngine.prepare()
+            try audioEngine.start()
+        } catch {
+            inputNode.removeTap(onBus: 0)
+            try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+            throw error
+        }
+
+        await MainActor.run {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
 
         return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<String, Error>) in
+            lock.lock()
+            if isCompleted {
+                lock.unlock()
+                cont.resume(throwing: CancellationError())
+                return
+            }
             self.continuation = cont
+            lock.unlock()
 
             scheduleSilenceTimer(seconds: 5.0)
             maxDurationTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(10.0))
+                guard !Task.isCancelled else { return }
                 self?.finish()
             }
 
@@ -65,7 +80,10 @@ final class ListenSession: @unchecked Sendable {
 
                 if let result {
                     let text = result.bestTranscription.formattedString
+                    self.lock.lock()
                     self.latestTranscript = text
+                    self.lock.unlock()
+
                     if result.isFinal {
                         self.finish()
                         return
@@ -74,7 +92,10 @@ final class ListenSession: @unchecked Sendable {
                 }
 
                 if let error {
-                    self.complete(with: self.latestTranscript.isEmpty ? error : nil)
+                    self.lock.lock()
+                    let hasTranscript = !self.latestTranscript.isEmpty
+                    self.lock.unlock()
+                    self.complete(with: hasTranscript ? nil : error)
                 }
             }
         }
@@ -89,20 +110,30 @@ final class ListenSession: @unchecked Sendable {
     }
 
     private func scheduleSilenceTimer(seconds: TimeInterval) {
+        lock.lock()
         silenceTimerTask?.cancel()
         silenceTimerTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
             self?.finish()
         }
+        lock.unlock()
     }
 
     private func complete(with error: Error?) {
-        guard !isCompleted else { return }
+        lock.lock()
+        guard !isCompleted else {
+            lock.unlock()
+            return
+        }
         isCompleted = true
-
+        let transcript = latestTranscript
+        let cont = continuation
+        continuation = nil
         silenceTimerTask?.cancel()
         maxDurationTask?.cancel()
+        lock.unlock()
+
         request.endAudio()
         if audioEngine.isRunning {
             audioEngine.stop()
@@ -112,21 +143,23 @@ final class ListenSession: @unchecked Sendable {
         recognitionTask = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
-        Task { @MainActor in
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        if error == nil {
+            Task { @MainActor in
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
         }
 
         if let error {
-            continuation?.resume(throwing: error)
+            cont?.resume(throwing: error)
         } else {
-            continuation?.resume(returning: latestTranscript)
+            cont?.resume(returning: transcript)
         }
-        continuation = nil
     }
 }
 
 final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     private let synthesizer = AVSpeechSynthesizer()
+    private let lock = NSLock()
     private var continuation: CheckedContinuation<Void, Error>?
     private var isCompleted = false
 
@@ -144,7 +177,15 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
         utterance.voice = AVSpeechSynthesisVoice(language: locale.identifier)
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            lock.lock()
+            if isCompleted {
+                lock.unlock()
+                try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                cont.resume(throwing: CancellationError())
+                return
+            }
             self.continuation = cont
+            lock.unlock()
             synthesizer.speak(utterance)
         }
     }
@@ -163,16 +204,22 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
     }
 
     private func complete(with error: Error?) {
-        guard !isCompleted else { return }
+        lock.lock()
+        guard !isCompleted else {
+            lock.unlock()
+            return
+        }
         isCompleted = true
+        let cont = continuation
+        continuation = nil
+        lock.unlock()
 
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
         if let error {
-            continuation?.resume(throwing: error)
+            cont?.resume(throwing: error)
         } else {
-            continuation?.resume()
+            cont?.resume()
         }
-        continuation = nil
     }
 }

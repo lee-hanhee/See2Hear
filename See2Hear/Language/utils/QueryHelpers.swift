@@ -39,7 +39,16 @@ func parseQuery(_ transcript: String) -> QueryParseOutcome {
 
     guard !tokens.isEmpty else { return .unmatched }
 
-    if let gateIndex = tokens.firstIndex(where: { gateKeywords.contains($0) }) {
+    let gateIndex = tokens.firstIndex(where: { gateKeywords.contains($0) })
+    let hasWashroom = tokens.contains(where: { washroomKeywords.contains($0) })
+    let hasRestaurant = tokens.contains(where: { restaurantKeywords.contains($0) })
+
+    let matchedCategories = [gateIndex != nil, hasWashroom, hasRestaurant].filter { $0 }.count
+    guard matchedCategories == 1 else {
+        return .unmatched
+    }
+
+    if let gateIndex {
         if let gateNumber = extractGateNumber(from: tokens, gateIndex: gateIndex) {
             guard let query = SignQuery(queryID: UUID(), label: .gate, requestedGateID: gateNumber) else {
                 return .unsupported
@@ -49,32 +58,52 @@ func parseQuery(_ transcript: String) -> QueryParseOutcome {
         return .matched(SignQuery(queryID: UUID(), label: .gate)!)
     }
 
-    if tokens.contains(where: { washroomKeywords.contains($0) }) {
+    if hasWashroom {
         return .matched(SignQuery(queryID: UUID(), label: .washroom)!)
     }
 
-    if tokens.contains(where: { restaurantKeywords.contains($0) }) {
-        return .matched(SignQuery(queryID: UUID(), label: .restaurant)!)
-    }
-
-    return .unmatched
+    return .matched(SignQuery(queryID: UUID(), label: .restaurant)!)
 }
 
+/// Extracts a gate number only when it immediately follows "gate" (or "gate number <N>").
 private func extractGateNumber(from tokens: [String], gateIndex: Int) -> Int? {
-    for (offset, token) in tokens[(gateIndex + 1)...].enumerated() {
-        if let value = Int(token) ?? numberWords[token] {
-            return value
-        }
-        if offset == 0, let value = postGateHomophones[token] {
-            return value
-        }
+    let nextIndex = gateIndex + 1
+    guard nextIndex < tokens.count else { return nil }
+
+    let firstToken = tokens[nextIndex]
+    if let value = Int(firstToken) ?? numberWords[firstToken] ?? postGateHomophones[firstToken] {
+        return value
     }
-    for token in tokens[..<gateIndex] {
-        if let value = Int(token) ?? numberWords[token] {
-            return value
-        }
+
+    if (firstToken == "number" || firstToken == "no"), nextIndex + 1 < tokens.count {
+        let secondToken = tokens[nextIndex + 1]
+        return Int(secondToken) ?? numberWords[secondToken]
     }
+
     return nil
+}
+
+/// Strictly parses the constrained 10-label LLM output without heuristic keyword scanning.
+func parseLLMReply(_ reply: String) -> SignQuery? {
+    let normalized = reply
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .lowercased()
+        .trimmingCharacters(in: .punctuationCharacters)
+
+    switch normalized {
+    case "washroom":
+        return SignQuery(queryID: UUID(), label: .washroom)
+    case "restaurant":
+        return SignQuery(queryID: UUID(), label: .restaurant)
+    case "gate":
+        return SignQuery(queryID: UUID(), label: .gate)
+    default:
+        let parts = normalized.split(separator: " ")
+        if parts.count == 2, parts[0] == "gate", let id = Int(parts[1]) {
+            return SignQuery(queryID: UUID(), label: .gate, requestedGateID: id)
+        }
+        return nil
+    }
 }
 
 /// Adaptive silence delay in seconds after the most recent word:
