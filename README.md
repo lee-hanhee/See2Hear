@@ -11,7 +11,7 @@ presence. Localization, OCR, destination-arrow association and speech remain fut
 - [Ten slides: claims, figures and 20-second scripts](reports/progress_slides.md)
 - [Good + Outstanding rubric alignment](reports/rubric_alignment.md)
 - [Preparation and label provenance](docs/baseline_preparation.md)
-- [SVG figures](reports/svg/) · [PNG figures](reports/png/) · [contact sheet](reports/progress_contact_sheet.png) — tracked presentation outputs
+- Presentation SVG/PNG figures (`reports/svg/`, `reports/png/`) and generation scripts (`scripts/build_progress_figures.py`, `scripts/build_clean_progress.py`, `scripts/setup_lato.py`, `scripts/slide_style.py`) now live on the `presentation` branch.
 
 The clean-input run completed ten epochs; **validation selected epoch 2**, before
 full fine-tuning. Configured validation-selected thresholds give test macro F1
@@ -79,22 +79,11 @@ Existing completed outputs are protected against overwrite.
 
 ## Presentation figures
 
-```sh
-.venv/bin/python scripts/setup_lato.py
-.venv/bin/python scripts/build_progress_figures.py
-```
-
-Use **figure-only SVGs** from `reports/svg/` and copy each title from the Markdown
-slide plan into Google Slides. The SVGs have **no slide title, number or footer**.
-Diagram labels, axes and legends remain because they explain the evidence.
-SVGs outline actual Lato glyphs so their appearance is portable. Matching PNGs are supplied.
-The exact palette is navy `#1B2C4A`, orange `#F07A2A`, teal `#2F7F81`, slate `#3B4A66`,
-and white `#FFFFFF`. Lato files and license are cached in `artifacts/fonts/`.
-
-The main ten-slide story presents this one selected checkpoint, with requirement
-links and concrete next tests. It does not retell the old resolution-experiment
-timeline. Detailed threshold comparisons remain in the technical results. Ten slides at 20 seconds are
-3:20; the entire team presentation must still meet the ten-minute requirement.
+The ten figure-only Lato SVGs (`reports/svg/`), matching PNGs (`reports/png/`), and
+their generation scripts (`scripts/setup_lato.py`, `scripts/slide_style.py`,
+`scripts/build_clean_progress.py`, `scripts/build_progress_figures.py`) have been
+moved to the `presentation` branch to keep `image_model` focused on model code and
+experiment reports.
 
 ## Historical results and budget
 
