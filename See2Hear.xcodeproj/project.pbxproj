@@ -5,14 +5,30 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		140000000000000000000018 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 140000000000000000000006 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 140000000000000000000005;
+			remoteInfo = See2Hear;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		140000000000000000000001 /* See2Hear.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = See2Hear.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		140000000000000000000012 /* See2HearTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = See2HearTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		140000000000000000000002 /* See2Hear */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = See2Hear;
+			sourceTree = "<group>";
+		};
+		140000000000000000000013 /* See2HearTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = See2HearTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -22,13 +38,17 @@
 			isa = PBXGroup;
 			children = (
 				140000000000000000000002 /* See2Hear */,
+				140000000000000000000013 /* See2HearTests */,
 				140000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
 		140000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
-			children = (140000000000000000000001 /* See2Hear.app */);
+			children = (
+				140000000000000000000001 /* See2Hear.app */,
+				140000000000000000000012 /* See2HearTests.xctest */,
+			);
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -46,35 +66,79 @@
 			dependencies = ();
 			fileSystemSynchronizedGroups = (140000000000000000000002 /* See2Hear */);
 			name = See2Hear;
+			packageProductDependencies = (
+				140000000000000000000010 /* MLXLLM */,
+				140000000000000000000011 /* MLXLMCommon */,
+			);
 			productName = See2Hear;
 			productReference = 140000000000000000000001 /* See2Hear.app */;
 			productType = "com.apple.product-type.application";
+		};
+		140000000000000000000014 /* See2HearTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 140000000000000000000019;
+			buildPhases = (
+				140000000000000000000015 /* Sources */,
+				140000000000000000000016 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = (
+				140000000000000000000017 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (140000000000000000000013 /* See2HearTests */);
+			name = See2HearTests;
+			productName = See2HearTests;
+			productReference = 140000000000000000000012 /* See2HearTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		140000000000000000000006 /* Project object */ = {
 			isa = PBXProject;
-			attributes = {BuildIndependentTargetsInParallel = 1;};
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				TargetAttributes = {
+					140000000000000000000014 = {
+						TestTargetID = 140000000000000000000005;
+					};
+				};
+			};
 			buildConfigurationList = 140000000000000000000009;
 			developmentRegion = en;
 			knownRegions = (en, Base);
 			mainGroup = 140000000000000000000003;
+			packageReferences = (
+				14000000000000000000000F /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 140000000000000000000004 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (140000000000000000000005 /* See2Hear */);
+			targets = (
+				140000000000000000000005 /* See2Hear */,
+				140000000000000000000014 /* See2HearTests */,
+			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
 		140000000000000000000007 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		140000000000000000000015 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
 		140000000000000000000008 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		140000000000000000000016 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		140000000000000000000017 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 140000000000000000000005 /* See2Hear */;
+			targetProxy = 140000000000000000000018 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		14000000000000000000000B /* Debug */ = {
@@ -106,6 +170,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "See2Hear uses the microphone to listen for the sign you want to find.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "See2Hear uses on-device speech recognition to understand your sign request.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				MARKETING_VERSION = 0.1.0;
@@ -123,6 +189,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "See2Hear uses the microphone to listen for the sign you want to find.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "See2Hear uses on-device speech recognition to understand your sign request.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				MARKETING_VERSION = 0.1.0;
@@ -131,6 +199,40 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		14000000000000000000001A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.example.See2HearTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/See2Hear.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/See2Hear";
+			};
+			name = Debug;
+		};
+		14000000000000000000001B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.example.See2HearTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/See2Hear.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/See2Hear";
 			};
 			name = Release;
 		};
@@ -149,7 +251,37 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		140000000000000000000019 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (14000000000000000000001A /* Debug */, 14000000000000000000001B /* Release */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		14000000000000000000000F /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.25.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		140000000000000000000010 /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14000000000000000000000F /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLLM;
+		};
+		140000000000000000000011 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 14000000000000000000000F /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 140000000000000000000006 /* Project object */;
 }
