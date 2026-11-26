@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 import MLXLLM
 import MLXLMCommon
 import Speech
@@ -21,6 +22,7 @@ enum SpeechError: Error {
 
 final class SpeechInterface: SpeechInterfacing {
     static let defaultModelID = "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+    private static let mlxCacheLimitBytes = 20 * 1024 * 1024
 
     private static let llmInstructions = """
     Classify the airport passenger's spoken request into exactly one label:
@@ -98,22 +100,35 @@ final class SpeechInterface: SpeechInterfacing {
         }
     }
 
-    private func classifyWithLLM(_ transcript: String) async throws -> SignQuery? {
-        let container: ModelContainer
-        if let existing = modelContainer {
-            container = existing
-        } else {
-            let loaded = try await loadModelContainer(id: modelID)
-            modelContainer = loaded
-            container = loaded
-        }
+    /// Preloads and caches the on-device fallback LLM (e.g. while on Wi-Fi before offline use).
+    func preloadModel() async throws {
+        _ = try await loadOrReuseModelContainer()
+    }
 
+    private func loadOrReuseModelContainer() async throws -> ModelContainer {
+        try Task.checkCancellation()
+        if let existing = modelContainer {
+            return existing
+        }
+        Memory.cacheLimit = Self.mlxCacheLimitBytes
+        let loaded = try await loadModelContainer(id: modelID)
+        try Task.checkCancellation()
+        modelContainer = loaded
+        return loaded
+    }
+
+    private func classifyWithLLM(_ transcript: String) async throws -> SignQuery? {
+        let container = try await loadOrReuseModelContainer()
+        defer { Memory.clearCache() }
+
+        try Task.checkCancellation()
         let session = ChatSession(
             container,
             instructions: Self.llmInstructions,
             generateParameters: GenerateParameters(maxTokens: 8, temperature: 0.0)
         )
         let reply = try await session.respond(to: transcript)
+        try Task.checkCancellation()
         return parseLLMReply(reply)
     }
 }
