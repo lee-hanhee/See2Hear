@@ -18,14 +18,16 @@ enum ArrowDirection {
 
 /// Estimated distance from the phone to the sign.
 enum SignDistanceBand {
-    case near      // Below 5 m
-    case medium    // 5 m to below 15 m
-    case far       // 15 m or more
+    case near      // In the immediate surroundings
+    case medium    // Farther within the same area
+    case far       // In the background beyond the immediate area
 }
 
 struct VisionResult {
     let queryID: UUID
-    /// Present only when the requested target matches. On a miss, all metadata is nil.
+    /// Fast-track boxes guide centering on a category candidate.
+    /// A detailed result for a numbered gate includes a box only after the number matches.
+    /// On a miss, the box and all sign metadata are nil.
     let boundingBox: SignBoundingBox?
     let observedGateID: String?
     /// Use only the arrow associated with the matched destination.

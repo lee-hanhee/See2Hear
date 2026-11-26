@@ -224,3 +224,6 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 .DS_Store
+
+# Local airport image and video corpus
+/data/
