@@ -1,6 +1,6 @@
 import Foundation
 
-enum SignLabel {
+enum SignLabel: String {
     case washroom
     case restaurant
     case gate

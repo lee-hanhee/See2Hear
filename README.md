@@ -9,7 +9,7 @@
 
 Shared data structures are defined in `Contracts/`.
 
-Each subsystem will implement the protocols declared in `*Interface.swift`.
+The subsystem protocols are declared in `*Interface.swift`. Vision exposes independent detection, sign-reading, and distance calls through `VisionModelInvoking`. See the [Swift usage example and Apple benchmark](vision_experiments/README.md#swiftcore-ml).
 
 ## Linting
 

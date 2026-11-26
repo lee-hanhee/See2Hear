@@ -19,3 +19,16 @@ extension SignRecognizing {
         return try await readDetails(frame: frame, for: query, candidate: box)
     }
 }
+
+/// Independent per-frame model calls. Boxes use the upright source frame's pixels.
+protocol VisionModelInvoking: Sendable {
+    /// Candidates sorted by the reference detector's confidence, size and center ranking.
+    func detect(frame: CameraFrame, category: SignLabel) async throws -> [SignBoundingBox]
+    func readSign(frame: CameraFrame, category: SignLabel, box: SignBoundingBox) async throws -> SignReading?
+    func estimateDistance(frame: CameraFrame, category: SignLabel, box: SignBoundingBox) async throws -> SignDistanceBand
+}
+
+enum SignReading: Equatable {
+    case gate(Int)
+    case arrow(ArrowDirection)
+}
