@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1050" viewBox="0 0 1080 1050" role="img" aria-labelledby="title desc"><title id="title">See2Hear model routing</title><desc id="desc">One category per query. A detector provides a box for guidance. After stable centering the sign reader reads the selected crop; a category-specific distance model reads scene, crop and geometry. Numbered gate requests require a matching digit before distance.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L9,5 L0,10 Z" fill="#586980"/></marker></defs>
+<rect x="0" y="0" width="1080" height="1050" rx="0" fill="#f8fafc" stroke="none" stroke-width="1.5"/>
+<text x="32" y="46" font-family="DejaVu Sans, sans-serif" font-size="32" font-weight="700" text-anchor="start" fill="#152e43">How a camera frame becomes a sign reading</text>
+<text x="32" y="78" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="400" text-anchor="start" fill="#152e43">Follow the column for the active query. Each column has its own trained weights.</text>
+<rect x="32" y="101" width="1016" height="58" rx="10" fill="#18374b" stroke="none" stroke-width="1.5"/>
+<text x="540" y="137" font-family="DejaVu Sans, sans-serif" font-size="21" font-weight="700" text-anchor="middle" fill="white">Upright RGB frame  +  query category  +  optional requested gate number</text>
+<path d="M540 159 V175" stroke="#586980" stroke-width="2" fill="none"/>
+<path d="M194 175 H886" stroke="#586980" stroke-width="2" fill="none"/>
+<path d="M194 175 V195" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="198" width="324" height="135" rx="10" fill="#e5f3fb" stroke="#94bece" stroke-width="1.5"/>
+<text x="47" y="225" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#17617d">GATE   /   FAST TRACK</text>
+<text x="47" y="256" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700" text-anchor="start" fill="#152e43">YOLO11n detector</text>
+<text x="47" y="284" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Whole frame, 640 × 640</text>
+<text x="47" y="311" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">Out •   Boxes and category scores</text>
+<path d="M194 333 V352" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M540 175 V195" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="378" y="198" width="324" height="135" rx="10" fill="#e5f3fb" stroke="#94bece" stroke-width="1.5"/>
+<text x="393" y="225" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#17617d">RESTAURANT   /   FAST TRACK</text>
+<text x="393" y="256" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700" text-anchor="start" fill="#152e43">YOLO11n detector</text>
+<text x="393" y="284" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Whole frame, 640 × 640</text>
+<text x="393" y="311" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">Out •   Boxes and category scores</text>
+<path d="M540 333 V352" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M886 175 V195" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="724" y="198" width="324" height="135" rx="10" fill="#e5f3fb" stroke="#94bece" stroke-width="1.5"/>
+<text x="739" y="225" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#17617d">WASHROOM   /   FAST TRACK</text>
+<text x="739" y="256" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700" text-anchor="start" fill="#152e43">YOLO11n detector</text>
+<text x="739" y="284" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Whole frame, 640 × 640</text>
+<text x="739" y="311" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">Out •   Boxes and category scores</text>
+<path d="M886 333 V352" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="355" width="1016" height="101" rx="10" fill="#eaeef2" stroke="#b2bdc7" stroke-width="1.5"/>
+<text x="53" y="383" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#465666">CENTERING LOGIC</text>
+<text x="53" y="411" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">Select one box for guidance. Update it on each frame as the user aims the camera.</text>
+<text x="53" y="439" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#152e43">Run the slow track after the same sign is centered for three consecutive processed frames.</text>
+<path d="M194 456 V483" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="486" width="324" height="147" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="47" y="512" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   READ SIGN</text>
+<text x="47" y="544" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">MobileNetV3-Small</text>
+<text x="47" y="575" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Upper ⅔ of gate screen</text>
+<text x="47" y="601" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">          resized to 192 × 96</text>
+<text x="47" y="623" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">Out •   1–6 or unreadable</text>
+<path d="M540 456 V483" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="378" y="486" width="324" height="147" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="393" y="512" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   READ SIGN</text>
+<text x="393" y="544" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">MobileNetV3-Small</text>
+<text x="393" y="575" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Selected destination row</text>
+<text x="393" y="601" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">          resized to 192 × 96</text>
+<text x="393" y="623" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">Out •   ←, →, forward, or no arrow</text>
+<path d="M540 633 V768" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M886 456 V483" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="724" y="486" width="324" height="147" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="739" y="512" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   READ SIGN</text>
+<text x="739" y="544" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">MobileNetV3-Small</text>
+<text x="739" y="575" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">In   •   Selected destination row</text>
+<text x="739" y="601" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#152e43">          resized to 192 × 96</text>
+<text x="739" y="623" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">Out •   ←, →, forward, or no arrow</text>
+<path d="M886 633 V768" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M194 633 V646" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="649" width="324" height="103" rx="10" fill="#fff4db" stroke="#d9b971" stroke-width="1.5"/>
+<text x="47" y="672" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#815510">NUMBERED GATE REQUEST</text>
+<text x="47" y="697" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#152e43">Match → continue to distance</text>
+<text x="47" y="719" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">Wrong → reject this screen</text>
+<text x="47" y="740" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">Unreadable → retry while centered</text>
+<path d="M194 752 V768" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="771" width="324" height="148" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="47" y="797" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   ESTIMATE DISTANCE</text>
+<text x="47" y="826" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">Gate distance model</text>
+<text x="47" y="853" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">In   •   Scene 48 × 32 + crop 48 × 24</text>
+<text x="47" y="878" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">          + 13 box measurements</text>
+<text x="47" y="905" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#152e43">Out •   near, medium, or far</text>
+<path d="M194 919 V943" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="378" y="771" width="324" height="148" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="393" y="797" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   ESTIMATE DISTANCE</text>
+<text x="393" y="826" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">Restaurant distance model</text>
+<text x="393" y="853" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">In   •   Scene 48 × 32 + crop 48 × 24</text>
+<text x="393" y="878" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">          + 13 box measurements</text>
+<text x="393" y="905" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#152e43">Out •   near, medium, or far</text>
+<path d="M540 919 V943" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="724" y="771" width="324" height="148" rx="10" fill="#e9f6f0" stroke="#9dcab5" stroke-width="1.5"/>
+<text x="739" y="797" font-family="DejaVu Sans, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#196344">SLOW TRACK   /   ESTIMATE DISTANCE</text>
+<text x="739" y="826" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#152e43">Washroom distance model</text>
+<text x="739" y="853" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">In   •   Scene 48 × 32 + crop 48 × 24</text>
+<text x="739" y="878" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">          + 13 box measurements</text>
+<text x="739" y="905" font-family="DejaVu Sans, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#152e43">Out •   near, medium, or far</text>
+<path d="M886 919 V943" stroke="#586980" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="32" y="946" width="1016" height="69" rx="10" fill="#18374b" stroke="none" stroke-width="1.5"/>
+<text x="540" y="973" font-family="DejaVu Sans, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#c6e6ee">DETAILED VISION RESULT</text>
+<text x="540" y="1000" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="700" text-anchor="middle" fill="white">Query ID  +  selected box  +  gate ID or destination arrow (if readable)  +  distance</text>
+<text x="32" y="1038" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#152e43">For “find any gate,” the number check is skipped. A readable ID can still be returned.</text>
+</svg>
