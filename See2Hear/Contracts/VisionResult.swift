@@ -10,14 +10,14 @@ struct SignBoundingBox {
     let frameHeight: Int
 }
 
-enum ArrowDirection {
+enum ArrowDirection: String {
     case left
     case right
     case forward
 }
 
 /// Estimated distance from the phone to the sign.
-enum SignDistanceBand {
+enum SignDistanceBand: String {
     case near      // In the immediate surroundings
     case medium    // Farther within the same area
     case far       // In the background beyond the immediate area

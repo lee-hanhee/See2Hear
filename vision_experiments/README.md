@@ -142,10 +142,55 @@ As a separate runtime check, three observations 0.1 seconds apart of the centere
 
 On a Linux i7-12700K CPU, the median detector call took 37.8–39.4 ms and the 95th percentile took 44.7–52.3 ms across the three categories. The median additional metadata call on a selected box took 6.1–7.8 ms. These measurements include preprocessing and postprocessing, exclude PNG decoding, and omit the first call per stage. Pass `--timings /tmp/see2hear-timings.json` to measure the evaluation host.
 
-## iPhone handoff
+## Swift/Core ML
 
-The nine iOS 17 FP16 ML Programs live under `detection/models/*.mlpackage` and `readers/models/*.mlpackage`. The corresponding ONNX networks provide the Linux evaluation path. Add the relevant Core ML packages as Xcode model resources and implement `SignRecognizing.locate` for provisional centering and `readDetails` for the selected box. Use one session per active query.
+`CoreMLSignRecognizer` implements `VisionModelInvoking` and the existing `SignRecognizing` contract. Xcode compiles the nine FP16 model packages directly from this directory into the iOS app bundle. Keep one recognizer across calls to reuse loaded models. It accepts upright, unmirrored RGB frames and returns boxes in top-left source-image pixels.
 
-For detection, reproduce the centered RGB letterbox with padding 114. The Core ML image input scales RGB by 1/255 internally. Decode the `detections` array of shape `[1,5,8400]` as center x, center y, width, height and score in the 640-pixel canvas. Undo padding and per-axis resize, clip to the upright frame, and round to pixel coordinates. The crop and distance models take batch-one RGB float32 arrays in CHW order scaled to [0,1]. `readers/preprocess.py` gives the exact geometry vector order and crop rounding. `readers/infer.py` gives class order, softmax and confidence thresholds.
+```swift
+let models = CoreMLSignRecognizer()
+let candidates = try await models.detect(frame: frame, category: .gate)
+```
 
-ONNX export checks compare inference to the PyTorch model. The Linux export checks inspect the Core ML package specification. Core ML numerical parity, camera integration, sustained latency and thermal behavior on iPhone 13 require an Apple-device run.
+Given a box selected by the caller, either reader can run independently. A gate reader returns `.gate(number)` for a digit from 1 to 6, or `nil`. Restaurant and washroom readers return `.arrow(direction)` or `nil`. The distance estimator accepts the whole detected or annotated box, including for gates.
+
+```swift
+let sign = try await models.readSign(frame: frame, category: .gate, box: box)
+let distance = try await models.estimateDistance(frame: frame, category: .gate, box: box)
+```
+
+`locate` returns the highest-ranked guidance box. `readDetails` evaluates the supplied candidate and enforces a requested gate ID. Orchestration controls frame capture, candidate selection, centering, and when to invoke the readers.
+
+### Reproduce the Apple benchmark
+
+On a Mac with Xcode selected, run `./scripts/benchmark-vision.sh` from the repository root. With Xcode installed at its standard path, `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./scripts/benchmark-vision.sh` also works. The script builds an optimized executable from the app's Swift sources, compiles the shipped Core ML packages, and evaluates the 100 PNGs listed in `test_data/vision/labels.json`.
+
+On a paired iPhone, choose the phone as the Xcode destination and run `VisionModelTests.heldOutBenchmark()`. To measure optimized code from the command line, use the following command with your paired device ID and a development team configured for signing. The fixtures live in the test bundle. The same benchmark prints per-model counts and timings to the test console.
+
+```sh
+xcodebuild test -project See2Hear.xcodeproj -scheme See2Hear \
+  -configuration Release -destination 'platform=iOS,id=<device-id>' \
+  -only-testing:See2HearTests/VisionModelTests \
+  ENABLE_TESTABILITY=YES
+```
+
+### Apple accuracy and latency
+
+![Confusion matrices for all nine Core ML models and overall accuracy on the held-out frames](apple/vision-confusion-matrices.svg)
+
+On an Apple M5 MacBook Pro, the Swift/Core ML and Python/ONNX implementations produced the same counts below. Localization requires IoU ≥ 0.50. The independent reader columns score the annotated box on every positive. The final column requires the selected detector box and every requested field to be correct.
+
+| Category | Positive queries | Correct boxes | False positive boxes | Correct digit or arrow on annotated box | Correct distance on annotated box | Correct box and all fields |
+|---|---:|---:|---:|---:|---:|---:|
+| Gate | 16 | 15 | 2 | 13 | 16 | 11 |
+| Restaurant | 24 | 24 | 1 | 22 | 18 | 13 |
+| Washroom | 66 | 56 | 3 | 57 | 51 | 38 |
+
+The iOS 26.2 simulator reproduced the box, distance and complete-result counts. It read 56/66 washroom arrows on annotated crops. On frame 1822 the reader received byte-identical RGB inputs in Python, native macOS and the simulator. The left-arrow confidence was 0.5734 in ONNX, 0.5507 on the M5 and 0.5454 in the simulator. The shared 0.55 threshold makes the simulator abstain. This evaluation covers one airport recording.
+
+Warm wall-clock latency on the M5 MacBook Pro (macOS 26.6.2, Xcode 26.2, optimized Swift, Core ML compute units `.all`) is shown in milliseconds. Each cell gives p50 / p95. Timing starts with a decoded, upright 1080 × 1920 frame and includes the Swift call, preprocessing, inference, and output decoding. Each model's first timed call is excluded to omit initial loading. The detector has 90/99/92 warm samples for gate/restaurant/washroom and each reader has 15/23/65. Physical iPhone latency and sustained thermal performance remain unmeasured.
+
+| Category | Detector (ms) | Sign reader (ms) | Distance estimator (ms) |
+|---|---:|---:|---:|
+| Gate | 8.39 / 9.04 | 1.05 / 1.22 | 3.11 / 3.55 |
+| Restaurant | 7.01 / 8.62 | 1.27 / 1.52 | 3.04 / 3.42 |
+| Washroom | 6.86 / 7.66 | 1.19 / 1.73 | 2.91 / 3.28 |
