@@ -1,0 +1,16 @@
+included:
+  - See2Hear
+  - See2HearTests
+
+only_rules:
+  - duplicate_conditions # Catch copied branches that cannot handle a different case.
+  - duplicate_imports # Remove accidental repeated imports.
+  - duplicated_key_in_dictionary_literal # Catch entries that overwrite an intended mapping.
+  - force_try # Require deliberate handling of operations that can fail.
+  - force_cast # Catch unchecked assumptions about runtime types.
+  - unused_closure_parameter # Make intentionally unused callback arguments explicit.
+  - trailing_whitespace # Keep diffs clean.
+  - trailing_newline # Keep file endings consistent.
+  - trailing_semicolon # Avoid unnecessary statement separators.
+  - colon # Keep declarations and dictionaries consistently readable.
+  - comma # Keep argument and collection spacing consistent.

@@ -52,7 +52,8 @@ struct LanguageTests {
         ("where is gate 4", 4),
         ("gate for", 4),
         ("gate five please", 5),
-        ("looking for gate six", 6)
+        ("looking for gate six", 6),
+        ("gate 6", 6)
     ])
     func numberedGateQueries(transcript: String, expectedGate: Int) {
         guard case .matched(let query) = parseQuery(transcript) else {
@@ -61,6 +62,45 @@ struct LanguageTests {
         }
         #expect(query.label == .gate)
         #expect(query.requestedGateID == expectedGate)
+    }
+
+    @Test("Handles capitalization and everyday punctuation in queries")
+    func queryCapitalizationAndPunctuation() {
+        if case .matched(let washroom) = parseQuery("Where is the Washroom?") {
+            #expect(washroom.label == .washroom)
+            #expect(washroom.requestedGateID == nil)
+        } else {
+            Issue.record("Expected .matched washroom query")
+        }
+
+        if case .matched(let restaurant) = parseQuery("Find a Restaurant, please!") {
+            #expect(restaurant.label == .restaurant)
+            #expect(restaurant.requestedGateID == nil)
+        } else {
+            Issue.record("Expected .matched restaurant query")
+        }
+
+        if case .matched(let gate) = parseQuery("GATE 3.") {
+            #expect(gate.label == .gate)
+            #expect(gate.requestedGateID == 3)
+        } else {
+            Issue.record("Expected .matched gate query")
+        }
+    }
+
+    @Test("Constructs valid generic and numbered gate queries while preserving queryID")
+    func signQueryConstruction() throws {
+        let genericID = UUID()
+        let genericGate = try #require(SignQuery(queryID: genericID, label: .gate))
+        #expect(genericGate.queryID == genericID)
+        #expect(genericGate.label == .gate)
+        #expect(genericGate.requestedGateID == nil)
+
+        let numberedID = UUID()
+        let numberedGate = try #require(SignQuery(queryID: numberedID, label: .gate, requestedGateID: 6))
+        #expect(numberedGate.queryID == numberedID)
+        #expect(numberedGate.label == .gate)
+        #expect(numberedGate.requestedGateID == 6)
     }
 
     @Test("Rejects out-of-range gate numbers as .unsupported", arguments: [
@@ -100,9 +140,17 @@ struct LanguageTests {
         #expect(parseLLMReply("gate")?.label == .gate)
         #expect(parseLLMReply("gate")?.requestedGateID == nil)
 
+        let gate1 = parseLLMReply("gate 1")
+        #expect(gate1?.label == .gate)
+        #expect(gate1?.requestedGateID == 1)
+
         let gate4 = parseLLMReply("Gate 4.")
         #expect(gate4?.label == .gate)
         #expect(gate4?.requestedGateID == 4)
+
+        let gate6 = parseLLMReply("gate 6")
+        #expect(gate6?.label == .gate)
+        #expect(gate6?.requestedGateID == 6)
     }
 
     @Test("Rejects 'none' or verbose LLM replies without false positives", arguments: [
@@ -165,5 +213,47 @@ struct LanguageTests {
             distanceToSign: .far
         )
         #expect(formatFeedback(notVisible) == "Gate 4 sign is not visible.")
+
+        let genericGate = try #require(SignQuery(queryID: UUID(), label: .gate))
+
+        let visibleGenericGate = SpeechFeedback(
+            query: genericGate,
+            outcome: .targetVisible,
+            arrowDirection: nil,
+            distanceToSign: nil
+        )
+        #expect(formatFeedback(visibleGenericGate) == "Gate sign is visible.")
+
+        let notVisibleGenericGate = SpeechFeedback(
+            query: genericGate,
+            outcome: .targetNotVisible,
+            arrowDirection: nil,
+            distanceToSign: nil
+        )
+        #expect(formatFeedback(notVisibleGenericGate) == "Gate sign is not visible.")
+
+        let visibleFarRight = SpeechFeedback(
+            query: genericGate,
+            outcome: .targetVisible,
+            arrowDirection: .right,
+            distanceToSign: .far
+        )
+        #expect(formatFeedback(visibleFarRight) == "Gate sign is more than 15 meters away. Follow the arrow to the right.")
+
+        let visibleFarNoArrow = SpeechFeedback(
+            query: washroom,
+            outcome: .targetVisible,
+            arrowDirection: nil,
+            distanceToSign: .far
+        )
+        #expect(formatFeedback(visibleFarNoArrow) == "Washroom sign is more than 15 meters away.")
+
+        let visibleRightNoDistance = SpeechFeedback(
+            query: restaurant,
+            outcome: .targetVisible,
+            arrowDirection: .right,
+            distanceToSign: nil
+        )
+        #expect(formatFeedback(visibleRightNoDistance) == "Restaurant sign is visible. Follow the arrow to the right.")
     }
 }

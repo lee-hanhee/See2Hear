@@ -10,3 +10,17 @@
 Shared data structures are defined in `Contracts/`.
 
 Each subsystem will implement the protocols declared in `*Interface.swift`.
+
+## Linting
+
+Install [SwiftLint](https://github.com/realm/SwiftLint) with Homebrew:
+
+```sh
+brew install swiftlint
+```
+
+Run the shared local/CI lint check from the repository root:
+
+```sh
+./scripts/lint.sh
+```
