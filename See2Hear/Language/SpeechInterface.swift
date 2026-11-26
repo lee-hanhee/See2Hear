@@ -4,6 +4,7 @@ import MLXLLM
 import MLXLMCommon
 import Speech
 
+@MainActor
 protocol SpeechInterfacing {
     /// Listens for one spoken request. Return nil for an unsupported request.
     /// Throw if speech capture or recognition fails. Release the microphone
@@ -15,9 +16,16 @@ protocol SpeechInterfacing {
     func speak(_ feedback: SpeechFeedback) async throws
 }
 
-enum SpeechError: Error {
+enum SpeechError: LocalizedError {
     case recognizerUnavailable
     case notAuthorized
+
+    var errorDescription: String? {
+        switch self {
+        case .recognizerUnavailable: "Speech recognition is unavailable."
+        case .notAuthorized: "Allow microphone and speech recognition access in Settings to use See2Hear."
+        }
+    }
 }
 
 final class SpeechInterface: SpeechInterfacing {
@@ -40,6 +48,7 @@ final class SpeechInterface: SpeechInterfacing {
     """
 
     private let locale: Locale
+    private let listeningHaptics: Bool
     private let modelID: String
     private var modelContainer: ModelContainer?
     private var activeListenSession: ListenSession?
@@ -47,10 +56,12 @@ final class SpeechInterface: SpeechInterfacing {
 
     init(
         locale: Locale = Locale(identifier: "en-US"),
-        modelID: String = SpeechInterface.defaultModelID
+        modelID: String = SpeechInterface.defaultModelID,
+        listeningHaptics: Bool = true
     ) {
         self.locale = locale
         self.modelID = modelID
+        self.listeningHaptics = listeningHaptics
     }
 
     func finishListening() {
@@ -59,12 +70,13 @@ final class SpeechInterface: SpeechInterfacing {
 
     func listenForQuery() async throws -> SignQuery? {
         try await requestSpeechPermissions()
+        try Task.checkCancellation()
 
         guard let recognizer = SFSpeechRecognizer(locale: locale), recognizer.isAvailable else {
             throw SpeechError.recognizerUnavailable
         }
 
-        let session = ListenSession(recognizer: recognizer)
+        let session = ListenSession(recognizer: recognizer, listeningHaptics: listeningHaptics)
         activeListenSession = session
         defer { activeListenSession = nil }
 
@@ -96,7 +108,7 @@ final class SpeechInterface: SpeechInterfacing {
         try await withTaskCancellationHandler {
             try await session.speak(text, locale: locale)
         } onCancel: {
-            session.cancel()
+            Task { @MainActor in session.cancel() }
         }
     }
 

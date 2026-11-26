@@ -9,6 +9,7 @@ func requestSpeechPermissions() async throws {
             continuation.resume(returning: status)
         }
     }
+    try Task.checkCancellation()
     let micGranted = await AVAudioApplication.requestRecordPermission()
     guard speechStatus == .authorized, micGranted else {
         throw SpeechError.notAuthorized
@@ -28,34 +29,51 @@ final class ListenSession: @unchecked Sendable {
     private var latestTranscript = ""
     private var isCompleted = false
 
-    init(recognizer: SFSpeechRecognizer) {
+    private let listeningHaptics: Bool
+
+    init(recognizer: SFSpeechRecognizer, listeningHaptics: Bool) {
+        self.listeningHaptics = listeningHaptics
         self.recognizer = recognizer
         self.request.shouldReportPartialResults = true
         self.request.requiresOnDeviceRecognition = true
     }
 
     func run() async throws -> String {
+        try Task.checkCancellation()
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        guard format.channelCount > 0, format.sampleRate > 0 else {
+            try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+            throw SpeechError.recognizerUnavailable
+        }
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [request] buffer, _ in
             request.append(buffer)
         }
 
-        do {
-            audioEngine.prepare()
-            try audioEngine.start()
-        } catch {
+        // The task that installs the tap owns teardown, even if cancellation arrives
+        // before the recognition continuation has been installed.
+        defer {
+            maxDurationTask?.cancel()
+            audioEngine.stop()
             inputNode.removeTap(onBus: 0)
+            request.endAudio()
+            recognitionTask?.cancel()
+            recognitionTask = nil
             try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-            throw error
         }
+        try Task.checkCancellation()
+        audioEngine.prepare()
+        try audioEngine.start()
 
-        await MainActor.run {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        if listeningHaptics {
+            await MainActor.run {
+                guard !Task.isCancelled else { return }
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
         }
 
         return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<String, Error>) in
@@ -111,13 +129,14 @@ final class ListenSession: @unchecked Sendable {
 
     private func scheduleSilenceTimer(seconds: TimeInterval) {
         lock.lock()
+        defer { lock.unlock() }
+        guard !isCompleted else { return }
         silenceTimerTask?.cancel()
         silenceTimerTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
             self?.finish()
         }
-        lock.unlock()
     }
 
     private func complete(with error: Error?) {
@@ -131,19 +150,9 @@ final class ListenSession: @unchecked Sendable {
         let cont = continuation
         continuation = nil
         silenceTimerTask?.cancel()
-        maxDurationTask?.cancel()
         lock.unlock()
 
-        request.endAudio()
-        if audioEngine.isRunning {
-            audioEngine.stop()
-        }
-        audioEngine.inputNode.removeTap(onBus: 0)
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-
-        if error == nil {
+        if error == nil && listeningHaptics {
             Task { @MainActor in
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
@@ -168,10 +177,14 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
         synthesizer.delegate = self
     }
 
+    @MainActor
     func speak(_ text: String, locale: Locale) async throws {
+        try Task.checkCancellation()
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(.playback, mode: .voicePrompt, options: [.duckOthers])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+        defer { try? audioSession.setActive(false, options: .notifyOthersOnDeactivation) }
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: locale.identifier)
@@ -180,7 +193,6 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
             lock.lock()
             if isCompleted {
                 lock.unlock()
-                try? audioSession.setActive(false, options: .notifyOthersOnDeactivation)
                 cont.resume(throwing: CancellationError())
                 return
             }
@@ -190,6 +202,7 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
         }
     }
 
+    @MainActor
     func cancel() {
         synthesizer.stopSpeaking(at: .immediate)
         complete(with: CancellationError())
@@ -213,8 +226,6 @@ final class SpeakSession: NSObject, AVSpeechSynthesizerDelegate, @unchecked Send
         let cont = continuation
         continuation = nil
         lock.unlock()
-
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
         if let error {
             cont?.resume(throwing: error)

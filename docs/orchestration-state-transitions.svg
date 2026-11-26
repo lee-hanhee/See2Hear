@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 2750" width="1480" height="2750" role="img" aria-labelledby="title desc">
+<title id="title">See2Hear orchestration state transitions</title>
+<desc id="desc">A proposed search round with concurrent camera capture, speech cancellation, centering, a two-second haptic cue, five-frame voting, and three attempts to read a gate.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#435e71"/></marker></defs>
+<style>text {font-family: Inter,Arial,sans-serif;fill:#19334a} .small {font-size:15px} .edge {fill:none;stroke:#435e71;stroke-width:1.8;stroke-linejoin:round;marker-end:url(#arrow)} </style>
+<rect width="100%" height="100%" fill="#f5f7f7"/>
+<text x="40" y="56" text-anchor="start" style="font-size:38px;font-weight:650;fill:#19334a">See2Hear orchestration</text>
+<text x="41" y="91" text-anchor="start" style="font-size:22px;font-weight:400;fill:#405b69">Proposed state machine for one spoken airport-sign request</text>
+<rect x="42" y="119" width="235" height="31" rx="5" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="53" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Existing subsystem behavior</text>
+<rect x="291" y="119" width="288" height="31" rx="5" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="302" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">New coordinator / capture behavior</text>
+<rect x="593" y="119" width="246" height="31" rx="5" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="604" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Language gap or open TODO</text>
+<rect x="853" y="119" width="275" height="31" rx="5" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="864" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Destination in another panel</text>
+<rect x="28" y="173" width="1424" height="412" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">A. Listen and acquire a target</text>
+<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Camera capture runs throughout the foreground session. While listening, discard frames. Once a query is active, listen for cancel.</text>
+<rect x="55" y="285" width="235" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="68" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Listen for a query</text>
+<text x="68" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request → Language / Query.</text>
+<text x="68" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await the query or nil.</text>
+<rect x="360" y="285" width="240" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="373" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Start a round</text>
+<text x="373" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep the query ID and category.</text>
+<text x="373" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Start Language / Cancel watch.</text>
+<rect x="673" y="285" width="260" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="686" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Detect on the latest frame</text>
+<text x="686" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Run the category detector.</text>
+<text x="686" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Return ranked candidate boxes.</text>
+<rect x="1040" y="285" width="355" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="1053" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Track and guide</text>
+<text x="1053" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Pick an eligible box; apply low vibration.</text>
+<text x="1053" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Count consecutive centered observations.</text>
+<path class="edge" d="M290 330 L360 330"/>
+<text x="325" y="315" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">valid</text>
+<path class="edge" d="M600 330 L673 330"/>
+<path class="edge" d="M933 330 L1040 330"/>
+<text x="987" y="316" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">box</text>
+<rect x="55" y="447" width="235" height="88" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="68" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Invalid input · TODO</text>
+<text x="68" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Re-arm listening for now.</text>
+<text x="68" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">User feedback is undecided.</text>
+<path class="edge" d="M122 377 L122 447"/>
+<text x="177" y="423" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">empty / invalid</text>
+<path class="edge" d="M55 492 L43 492 L43 330 L55 330"/>
+<rect x="673" y="447" width="260" height="88" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="686" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Search with haptics off</text>
+<text x="686" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">No eligible box or target lost.</text>
+<text x="686" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Reset the centering streak.</text>
+<path class="edge" d="M764 377 L764 447"/>
+<text x="805" y="421" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">no box</text>
+<path class="edge" d="M673 494 L640 494 L640 354 L673 354"/>
+<rect x="1040" y="447" width="355" height="88" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1053" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">B · Start a read attempt</text>
+<text x="1053" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Third centered observation of the same</text>
+<text x="1053" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">candidate. Lock its track for this batch.</text>
+<path class="edge" d="M1220 377 L1220 447"/>
+<text x="1295" y="419" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">stable center</text>
+<path class="edge" d="M1040 353 L986 353 L986 403 L875 403 L875 377"/>
+<text x="993" y="429" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">otherwise: next frame</text>
+<text x="56" y="565" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Center rule from the Python reference: box center inside the middle 24% on each axis, box overlap (IoU) ≥ 0.40, and successive observations ≤ 0.5 s apart.</text>
+<rect x="28" y="609" width="1424" height="540" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="647" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">B. Read five fresh frames while the two-second pulse runs</text>
+<text x="52" y="675" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Start the two branches together for each attempt. Once one branch finishes, it waits for the other. Cancel or interruption preempts both.</text>
+<rect x="54" y="769" width="205" height="103" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="67" y="794" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Begin attempt</text>
+<text x="67" y="817" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clear this frame batch.</text>
+<text x="67" y="838" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep the candidate track.</text>
+<rect x="345" y="714" width="235" height="83" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="358" y="739" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">High vibration</text>
+<text x="358" y="762" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Apply high once. Start the</text>
+<text x="358" y="783" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">coordinator’s 2 s timer.</text>
+<rect x="690" y="714" width="245" height="83" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="703" y="739" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Pulse complete</text>
+<text x="703" y="762" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">At 2 s, apply off.</text>
+<text x="703" y="783" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stay silent if still reading.</text>
+<path class="edge" d="M259 821 L301 821 L301 756 L345 756"/>
+<path class="edge" d="M580 756 L690 756"/>
+<text x="635" y="743" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">2 s elapsed</text>
+<rect x="345" y="867" width="235" height="108" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="358" y="892" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Next camera frame</text>
+<text x="358" y="915" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Take the next captured frame</text>
+<text x="358" y="936" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">in capture order. Re-run the</text>
+<text x="358" y="957" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">fast detector for its box.</text>
+<rect x="650" y="867" width="285" height="108" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="663" y="892" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Read the tracked candidate</text>
+<text x="663" y="915" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Use this frame’s box for readSign</text>
+<text x="663" y="936" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">and estimateDistance. A missing</text>
+<text x="663" y="957" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">match gives one abstention.</text>
+<rect x="1016" y="867" width="372" height="108" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="1029" y="892" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Vote after five frame slots</text>
+<text x="1029" y="915" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same value in ≥3 of 5 wins a field.</text>
+<text x="1029" y="936" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">On split votes, mark the field unknown.</text>
+<text x="1029" y="957" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep this verdict until the pulse finishes.</text>
+<path class="edge" d="M301 821 L301 922 L345 922"/>
+<path class="edge" d="M580 922 L650 922"/>
+<path class="edge" d="M935 922 L1016 922"/>
+<text x="975" y="909" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">5 slots</text>
+<path class="edge" d="M782 975 L782 1012 L463 1012 L463 975"/>
+<text x="624" y="1003" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">fewer than 5: next frame</text>
+<rect x="1070" y="714" width="318" height="83" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1083" y="739" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">C · Release the verdict</text>
+<text x="1083" y="762" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Both pulse and vote are complete.</text>
+<text x="1083" y="783" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Choose the speech or search action.</text>
+<path class="edge" d="M935 756 L1070 756"/>
+<path class="edge" d="M1230 867 L1230 797"/>
+<text x="54" y="1064" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Track identity matters: a different screen entering the box cannot contribute a vote for the original candidate. A retry uses five new frames.</text>
+<text x="54" y="1097" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Compare raw gate digits before filtering on the requested ID. For a gate, take distance votes only from frames supporting the winning digit.</text>
+<rect x="28" y="1173" width="1424" height="500" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="1211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">C. Select the announcement and wait for playback</text>
+<text x="52" y="1239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Each row is a guarded transition after the pulse and vote. Keep the cancel listener active during every announcement.</text>
+<text x="56" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">VOTED OUTCOME</text>
+<text x="491" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">LANGUAGE / PLAYBACK</text>
+<text x="1080" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">AFTER PLAYBACK</text>
+<rect x="55" y="1294" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="1319" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Usable target</text>
+<text x="68" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Requested digit or readable generic gate.</text>
+<rect x="490" y="1294" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="503" y="1319" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Speak the result</text>
+<text x="503" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Speak target and available distance. See Playback detail.</text>
+<rect x="1080" y="1294" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1093" y="1319" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
+<text x="1093" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clear the round.</text>
+<path class="edge" d="M415 1327 L490 1327"/>
+<path class="edge" d="M995 1327 L1080 1327"/>
+<rect x="55" y="1364" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="1389" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Washroom or restaurant</text>
+<text x="68" y="1412" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same candidate identified on ≥3 of 5 frames.</text>
+<rect x="490" y="1364" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="503" y="1389" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Speak the sign and available details</text>
+<text x="503" y="1412" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">No arrow majority → pass nil; speech omits the direction.</text>
+<rect x="1080" y="1364" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1093" y="1389" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
+<text x="1093" y="1412" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clear the round.</text>
+<path class="edge" d="M415 1397 L490 1397"/>
+<path class="edge" d="M995 1397 L1080 1397"/>
+<rect x="55" y="1434" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Wrong numbered gate</text>
+<text x="68" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Another digit wins at least 3 of 5 votes.</text>
+<rect x="490" y="1434" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="503" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Announce the observed wrong gate</text>
+<text x="503" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Example: “This is Gate 6. I’ll keep looking for Gate 5.”</text>
+<rect x="1080" y="1434" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1093" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Searching</text>
+<text x="1093" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same query; suppress that screen.</text>
+<path class="edge" d="M415 1467 L490 1467"/>
+<path class="edge" d="M995 1467 L1080 1467"/>
+<rect x="55" y="1504" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Gate unreadable · attempt 1 or 2</text>
+<text x="68" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">No digit wins at least 3 of 5 votes.</text>
+<rect x="490" y="1504" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="503" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Ask the user to hold the phone still</text>
+<text x="503" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Finish the prompt before sampling the next five frames.</text>
+<rect x="1080" y="1504" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1093" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">B · Next attempt</text>
+<text x="1093" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same query and candidate.</text>
+<path class="edge" d="M415 1537 L490 1537"/>
+<path class="edge" d="M995 1537 L1080 1537"/>
+<rect x="55" y="1574" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Gate unreadable · attempt 3</text>
+<text x="68" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Three total attempts, including the initial read.</text>
+<rect x="490" y="1574" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="503" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Announce failure</text>
+<text x="503" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Example: “Something went wrong. I couldn’t read the gate.”</text>
+<rect x="1080" y="1574" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1093" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
+<text x="1093" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Abort and clear the round.</text>
+<path class="edge" d="M415 1607 L490 1607"/>
+<path class="edge" d="M995 1607 L1080 1607"/>
+<rect x="28" y="1697" width="1424" height="355" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="1735" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">D. Cancel, interrupt, and recover</text>
+<text x="52" y="1763" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">These transitions apply across the active states, including the haptic timer, inference, silent waiting, and speech playback.</text>
+<rect x="56" y="1806" width="358" height="67" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="69" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Spoken cancel · NEW Language</text>
+<text x="69" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Event from Language / Cancel watch.</text>
+<rect x="56" y="1894" width="358" height="67" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="69" y="1919" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Interruption / resource loss</text>
+<text x="69" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Backgrounding, unavailable camera or audio.</text>
+<rect x="509" y="1806" width="398" height="155" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="522" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Abort the current work</text>
+<text x="522" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Invalidate the round ID. Cancel reads, speech,</text>
+<text x="522" y="1875" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">listening tasks and timers. Apply haptics off.</text>
+<text x="522" y="1896" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Release active resources and discard late results.</text>
+<text x="522" y="1917" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Preserve camera capture only if still available.</text>
+<rect x="1036" y="1806" width="355" height="67" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1049" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
+<text x="1049" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Spoken cancel while resources are ready.</text>
+<rect x="1036" y="1894" width="355" height="67" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="1049" y="1919" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Suspended</text>
+<text x="1049" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stop capture; wait for foreground and access.</text>
+<path class="edge" d="M414 1840 L509 1840"/>
+<path class="edge" d="M414 1928 L509 1928"/>
+<path class="edge" d="M907 1840 L1036 1840"/>
+<text x="972" y="1827" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">cancel</text>
+<path class="edge" d="M907 1928 L1036 1928"/>
+<text x="971" y="1915" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">interrupted</text>
+<path class="edge" d="M1391 1928 L1421 1928 L1421 1840 L1391 1840"/>
+<text x="54" y="2003" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">When resources return, restart capture and listen for a fresh query. A missing sign is a normal detector result; a thrown camera, model or speech error is a fault.</text>
+<text x="54" y="2030" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Proposed fault policy: abort on a one-round failure; enter Suspended if the required resource remains unavailable. Never replay a stale result or prompt.</text>
+<text x="42" y="2093" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">Other branches and ownership</text>
+<text x="42" y="2121" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">If a washroom or restaurant lacks a stable candidate on 3 of 5 frames, return to Searching silently after the pulse. No distance majority → pass nil.</text>
+<text x="42" y="2147" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Vision supplies per-frame predictions; Orchestration owns tracking, batches, votes, timers and routing. Haptic already supports off, low and high.</text>
+<rect x="28" y="2182" width="1424" height="510" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="2220" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">Language detail · calls from A and C</text>
+<text x="52" y="2248" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Follow the row named at the call site. Each row shows the caller, the language work, and the event delivered back to orchestration.</text>
+<rect x="55" y="2306" width="210" height="95" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="68" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
+<text x="68" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request one query.</text>
+<rect x="315" y="2306" width="240" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="328" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Query · Capture</text>
+<text x="328" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Transcribe until final text</text>
+<text x="328" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">or silence.</text>
+<rect x="610" y="2306" width="242" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="623" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Parse transcript</text>
+<text x="623" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Direct match → query.</text>
+<text x="623" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Empty / unsupported → nil.</text>
+<rect x="908" y="2306" width="220" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="921" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Fallback classifier</text>
+<text x="921" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Unmatched text → classify</text>
+<text x="921" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">and parse the reply.</text>
+<rect x="1180" y="2306" width="219" height="95" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1193" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Return to A</text>
+<text x="1193" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Query → start round.</text>
+<text x="1193" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Nil → invalid-input path.</text>
+<path class="edge" d="M265 2355 L315 2355"/>
+<path class="edge" d="M555 2355 L610 2355"/>
+<path class="edge" d="M852 2355 L908 2355"/>
+<path class="edge" d="M1128 2355 L1180 2355"/>
+<path class="edge" d="M737 2306 L737 2284 L1288 2284 L1288 2306"/>
+<text x="1005" y="2278" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">direct match / empty / unsupported</text>
+<rect x="55" y="2440" width="290" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="68" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Start a round</text>
+<text x="68" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Arm the cancel listener.</text>
+<rect x="415" y="2440" width="536" height="85" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="428" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Cancel watch · NEW Language</text>
+<text x="428" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Listen alongside searching, reading and speech playback.</text>
+<text x="428" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ignore the app’s own voice. Stop when the round ends.</text>
+<rect x="1030" y="2440" width="369" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1043" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">D · Abort the round</text>
+<text x="1043" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">A spoken cancel triggers cleanup.</text>
+<text x="1043" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Return to A when resources are ready.</text>
+<path class="edge" d="M345 2482 L415 2482"/>
+<path class="edge" d="M951 2482 L1030 2482"/>
+<text x="990" y="2469" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">cancel</text>
+<rect x="55" y="2558" width="290" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="68" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">C · Announcement selected</text>
+<text x="68" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Send feedback for this outcome.</text>
+<rect x="415" y="2558" width="284" height="85" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<text x="428" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Format feedback</text>
+<text x="428" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">NEW: wrong gate, retry, failure,</text>
+<text x="428" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">or observed generic gate digit.</text>
+<rect x="755" y="2558" width="238" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="768" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Playback · Speak</text>
+<text x="768" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Synthesize speech and</text>
+<text x="768" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">await completion.</text>
+<rect x="1050" y="2558" width="349" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
+<text x="1063" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Return to C</text>
+<text x="1063" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Playback done → take that outcome’s</text>
+<text x="1063" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Listening, Searching or Next attempt exit.</text>
+<path class="edge" d="M345 2600 L415 2600"/>
+<path class="edge" d="M699 2600 L755 2600"/>
+<path class="edge" d="M993 2600 L1050 2600"/>
+<text x="54" y="2675" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Speech and microphone faults route to D. Supporting cancel during playback requires coordinating the shared audio session and filtering app speech.</text>
+<text x="42" y="2724" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Retry assumption: the three-attempt limit applies to an unreadable gate episode. A readable wrong gate returns to search with that track suppressed while visible.</text>
+</svg>
