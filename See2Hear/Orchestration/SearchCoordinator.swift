@@ -12,6 +12,7 @@ final class SearchCoordinator {
 
     private(set) var phase: Phase = .stopped
     private(set) var isEnabled = false
+    var isLoadingModel: Bool { speech.isLoadingModel }
     private var suspensionReason: String?
     private let camera: any FrameCapturing
     private let speech: any SpeechInterfacing
@@ -119,32 +120,56 @@ final class SearchCoordinator {
         try Task.checkCancellation()
         guard let query = try await speech.listenForQuery() else { return }
         try Task.checkCancellation()
-        while true {
+        try await announce(.searchStarted, for: query)
+        var rejected = RejectedSigns()
+        search: while true {
             try Task.checkCancellation()
             phase = .searching
-            let target = try await findCenteredSign(for: query)
-            try Task.checkCancellation()
-            phase = .reading
-            let batch = try await readWithPulse(for: query, target: target)
-            try Task.checkCancellation()
-            switch batch.outcome(for: query) {
-            case .abort: return
-            case .searchAgain: continue
-            case .speak(let feedback):
-                phase = .speaking
-                try await speech.speak(feedback)
-                return
+            var target = try await findCenteredSign(for: query, rejected: &rejected)
+            for attempt in 1...3 {
+                try Task.checkCancellation()
+                phase = .reading
+                let result = try await readWithPulse(for: query, target: target,
+                                                     afterPlayback: attempt > 1, rejected: &rejected)
+                target = result.track
+                try Task.checkCancellation()
+                switch result.batch.outcome(for: query) {
+                case .lostCandidate:
+                    try await announce(.lostSightOfSign, for: query)
+                    continue search
+                case .wrongGate(let number):
+                    rejected.tracks.append(target)
+                    try await announce(.wrongGate(observedGateID: number), for: query)
+                    continue search
+                case .unreadableGate:
+                    if attempt == 3 {
+                        try await announce(.recognitionFailed, for: query)
+                        return
+                    }
+                    try await announce(.retryingRecognition(retryNumber: attempt == 1 ? .first : .second), for: query)
+                case .speak(let feedback):
+                    try await announce(feedback.event, for: query)
+                    return
+                }
             }
         }
     }
 
-    private func findCenteredSign(for query: SignQuery) async throws -> TrackedSign {
+    private func announce(_ event: SearchFeedbackEvent, for query: SignQuery) async throws {
+        try Task.checkCancellation()
+        phase = .speaking
+        haptics.apply(HapticFeedback(strength: .off))
+        try await speech.speak(SpeechFeedback(query: query, event: event))
+    }
+
+    private func findCenteredSign(for query: SignQuery, rejected: inout RejectedSigns) async throws -> TrackedSign {
         var streak = CenteringStreak()
         defer { camera.discardFrames() }
         for try await sample in camera.frames(.latest) {
             try Task.checkCancellation()
-            let box = try await vision.detect(frame: sample.frame, category: query.label).first
+            let boxes = try await vision.detect(frame: sample.frame, category: query.label)
             try Task.checkCancellation()
+            let box = rejected.eligible(boxes, at: sample.timestamp).first
             if let target = streak.observe(box, at: sample.timestamp) { return target }
             haptics.apply(HapticFeedback(strength: box == nil ? .off : .low))
         }
@@ -152,11 +177,13 @@ final class SearchCoordinator {
         throw CaptureError.unavailable
     }
 
-    private func readWithPulse(for query: SignQuery, target: TrackedSign) async throws -> SignBatch {
+    private func readWithPulse(for query: SignQuery, target: TrackedSign, afterPlayback: Bool,
+                               rejected: inout RejectedSigns) async throws -> (batch: SignBatch, track: TrackedSign) {
         haptics.apply(HapticFeedback(strength: .high))
         let deadline = ContinuousClock.now.advanced(by: pulseDuration)
         async let pulse: Void = finishPulse(at: deadline)
         var track = target
+        var reanchor = afterPlayback
         var batch = SignBatch()
         var received = 0
         defer { camera.discardFrames() }
@@ -165,8 +192,10 @@ final class SearchCoordinator {
             received += 1
             let boxes = try await vision.detect(frame: sample.frame, category: query.label)
             try Task.checkCancellation()
-            if let matched = track.matching(boxes, at: sample.timestamp) {
+            let eligible = rejected.eligible(boxes, at: sample.timestamp)
+            if let matched = track.matching(eligible, at: sample.timestamp, afterPlayback: reanchor) {
                 track = matched
+                reanchor = false
                 let reading = try await vision.readSign(frame: sample.frame, category: query.label, box: matched.box)
                 try Task.checkCancellation()
                 let distance = try await vision.estimateDistance(frame: sample.frame, category: query.label, box: matched.box)
@@ -177,7 +206,7 @@ final class SearchCoordinator {
         try Task.checkCancellation()
         guard received == SignBatch.size else { throw CaptureError.unavailable }
         try await pulse
-        return batch
+        return (batch, track)
     }
 
     private func finishPulse(at deadline: ContinuousClock.Instant) async throws {

@@ -44,7 +44,7 @@ private struct SearchView: View {
         switch coordinator.phase {
         case .stopped: "Ready for a new request"
         case .starting: "Starting"
-        case .listening: "Listening for your request"
+        case .listening: coordinator.isLoadingModel ? "Loading model…" : "Listening for your request"
         case .searching: "Searching for the sign"
         case .reading: "Reading the sign"
         case .speaking: "Speaking the result"
@@ -79,7 +79,8 @@ private struct SearchView: View {
         .accessibilityLabel(actionLabel)
         .accessibilityValue(status)
         .accessibilityHint(canStart ? "Starts a new sign request" : "Ends the current session")
-        // TODO(UI): refine the full-screen presentation and review VoiceOver and large-text interaction.
+        // TODO(UI): review VoiceOver labels, status changes, and full-screen button activation.
+        // TODO(UI): refine contrast and check large-text layout across screen sizes.
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { resumeIfAvailable() }
             if phase == .background { coordinator.stop(reason: "App in background.") }
@@ -112,6 +113,7 @@ private struct SearchView: View {
     }
 
     private func resumeIfAvailable() {
+        // TODO(Orchestration): defer recovery received during stopping until cleanup finishes, if still enabled.
         if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.resumeIfEnabled() }
     }
 }

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 2750" width="1480" height="2750" role="img" aria-labelledby="title desc">
 <title id="title">See2Hear orchestration state transitions</title>
-<desc id="desc">A proposed search round with concurrent camera capture, speech cancellation, centering, a two-second haptic cue, five-frame voting, and three attempts to read a gate.</desc>
+<desc id="desc">Search rounds with UI Start/Stop, multi-turn clarification, model-loading feedback, five-frame voting, gate retries, and wrong-gate suppression.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#435e71"/></marker></defs>
 <style>text {font-family: Inter,Arial,sans-serif;fill:#19334a} .small {font-size:15px} .edge {fill:none;stroke:#435e71;stroke-width:1.8;stroke-linejoin:round;marker-end:url(#arrow)} </style>
 <rect width="100%" height="100%" fill="#f5f7f7"/>
 <text x="40" y="56" text-anchor="start" style="font-size:38px;font-weight:650;fill:#19334a">See2Hear orchestration</text>
-<text x="41" y="91" text-anchor="start" style="font-size:22px;font-weight:400;fill:#405b69">Proposed state machine for one spoken airport-sign request</text>
+<text x="41" y="91" text-anchor="start" style="font-size:22px;font-weight:400;fill:#405b69">Search transitions, spoken feedback, and UI-controlled sessions</text>
 <rect x="42" y="119" width="235" height="31" rx="5" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="53" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Existing subsystem behavior</text>
 <rect x="291" y="119" width="288" height="31" rx="5" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
@@ -16,15 +16,15 @@
 <text x="864" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Destination in another panel</text>
 <rect x="28" y="173" width="1424" height="412" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">A. Listen and acquire a target</text>
-<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Camera capture runs throughout the foreground session. While listening, discard frames. Once a query is active, listen for cancel.</text>
+<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">UI Start enables the session. Await Language clarification, then search. The full-screen Stop button cancels active work.</text>
 <rect x="55" y="285" width="235" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="68" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Listen for a query</text>
 <text x="68" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request → Language / Query.</text>
-<text x="68" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await the query or nil.</text>
+<text x="68" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await a complete query.</text>
 <rect x="360" y="285" width="240" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="373" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Start a round</text>
 <text x="373" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep the query ID and category.</text>
-<text x="373" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Start Language / Cancel watch.</text>
+<text x="373" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await search-start speech.</text>
 <rect x="673" y="285" width="260" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="686" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Detect on the latest frame</text>
 <text x="686" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Run the category detector.</text>
@@ -38,12 +38,12 @@
 <path class="edge" d="M600 330 L673 330"/>
 <path class="edge" d="M933 330 L1040 330"/>
 <text x="987" y="316" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">box</text>
-<rect x="55" y="447" width="235" height="88" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="68" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Invalid input · TODO</text>
-<text x="68" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Re-arm listening for now.</text>
-<text x="68" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">User feedback is undecided.</text>
+<rect x="55" y="447" width="235" height="88" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="68" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Clarify inside Language</text>
+<text x="68" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ask, speak, and listen again.</text>
+<text x="68" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Silence keeps the conversation.</text>
 <path class="edge" d="M122 377 L122 447"/>
-<text x="177" y="423" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">empty / invalid</text>
+<text x="177" y="423" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">clarification / silence</text>
 <path class="edge" d="M55 492 L43 492 L43 330 L55 330"/>
 <rect x="673" y="447" width="260" height="88" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="686" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Search with haptics off</text>
@@ -110,13 +110,13 @@
 <text x="54" y="1097" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Compare raw gate digits before filtering on the requested ID. For a gate, take distance votes only from frames supporting the winning digit.</text>
 <rect x="28" y="1173" width="1424" height="500" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="1211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">C. Select the announcement and wait for playback</text>
-<text x="52" y="1239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Each row is a guarded transition after the pulse and vote. Keep the cancel listener active during every announcement.</text>
+<text x="52" y="1239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Each row follows the pulse and vote. Await playback before continuing; the UI Stop button cancels the session.</text>
 <text x="56" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">VOTED OUTCOME</text>
 <text x="491" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">LANGUAGE / PLAYBACK</text>
 <text x="1080" y="1278" text-anchor="start" style="font-size:14px;font-weight:650;fill:#516c7e">AFTER PLAYBACK</text>
 <rect x="55" y="1294" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="68" y="1319" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Usable target</text>
-<text x="68" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Requested digit or readable generic gate.</text>
+<text x="68" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Requested digit wins at least 3 of 5.</text>
 <rect x="490" y="1294" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="503" y="1319" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Speak the result</text>
 <text x="503" y="1342" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Speak target and available distance. See Playback detail.</text>
@@ -139,54 +139,54 @@
 <rect x="55" y="1434" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="68" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Wrong numbered gate</text>
 <text x="68" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Another digit wins at least 3 of 5 votes.</text>
-<rect x="490" y="1434" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="503" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Announce the observed wrong gate</text>
-<text x="503" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Example: “This is Gate 6. I’ll keep looking for Gate 5.”</text>
+<rect x="490" y="1434" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="503" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Announce the observed wrong gate</text>
+<text x="503" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Name the observed gate, then the requested gate.</text>
 <rect x="1080" y="1434" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="1093" y="1459" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Searching</text>
-<text x="1093" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same query; suppress that screen.</text>
+<text x="1093" y="1482" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Suppress the track while visible.</text>
 <path class="edge" d="M415 1467 L490 1467"/>
 <path class="edge" d="M995 1467 L1080 1467"/>
 <rect x="55" y="1504" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="68" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Gate unreadable · attempt 1 or 2</text>
 <text x="68" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">No digit wins at least 3 of 5 votes.</text>
-<rect x="490" y="1504" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="503" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Ask the user to hold the phone still</text>
+<rect x="490" y="1504" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="503" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Ask the user to hold the phone still</text>
 <text x="503" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Finish the prompt before sampling the next five frames.</text>
 <rect x="1080" y="1504" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="1093" y="1529" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">B · Next attempt</text>
-<text x="1093" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same query and candidate.</text>
+<text x="1093" y="1552" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Same candidate; five fresh frames.</text>
 <path class="edge" d="M415 1537 L490 1537"/>
 <path class="edge" d="M995 1537 L1080 1537"/>
 <rect x="55" y="1574" width="360" height="64" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="68" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Gate unreadable · attempt 3</text>
 <text x="68" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Three total attempts, including the initial read.</text>
-<rect x="490" y="1574" width="505" height="64" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="503" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">NEW · Announce failure</text>
-<text x="503" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Example: “Something went wrong. I couldn’t read the gate.”</text>
+<rect x="490" y="1574" width="505" height="64" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="503" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Announce failure</text>
+<text x="503" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">“I couldn’t read the sign.” Invite a new request.</text>
 <rect x="1080" y="1574" width="310" height="64" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="1093" y="1599" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
 <text x="1093" y="1622" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Abort and clear the round.</text>
 <path class="edge" d="M415 1607 L490 1607"/>
 <path class="edge" d="M995 1607 L1080 1607"/>
 <rect x="28" y="1697" width="1424" height="355" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
-<text x="52" y="1735" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">D. Cancel, interrupt, and recover</text>
+<text x="52" y="1735" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">D. UI Stop, interrupt, and recover</text>
 <text x="52" y="1763" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">These transitions apply across the active states, including the haptic timer, inference, silent waiting, and speech playback.</text>
-<rect x="56" y="1806" width="358" height="67" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="69" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Spoken cancel · NEW Language</text>
-<text x="69" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Event from Language / Cancel watch.</text>
+<rect x="56" y="1806" width="358" height="67" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="69" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Full-screen Stop button</text>
+<text x="69" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Disable the session immediately.</text>
 <rect x="56" y="1894" width="358" height="67" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="69" y="1919" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Interruption / resource loss</text>
 <text x="69" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Backgrounding, unavailable camera or audio.</text>
 <rect x="509" y="1806" width="398" height="155" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="522" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Abort the current work</text>
-<text x="522" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Invalidate the round ID. Cancel reads, speech,</text>
+<text x="522" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Enter Stopping. Cancel reads, speech,</text>
 <text x="522" y="1875" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">listening tasks and timers. Apply haptics off.</text>
 <text x="522" y="1896" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Release active resources and discard late results.</text>
-<text x="522" y="1917" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Preserve camera capture only if still available.</text>
+<text x="522" y="1917" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stop capture; await cancelled work before Start.</text>
 <rect x="1036" y="1806" width="355" height="67" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
-<text x="1049" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
-<text x="1049" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Spoken cancel while resources are ready.</text>
+<text x="1049" y="1831" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Stopped</text>
+<text x="1049" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stopped until the user presses Start.</text>
 <rect x="1036" y="1894" width="355" height="67" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="1049" y="1919" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Suspended</text>
 <text x="1049" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stop capture; wait for foreground and access.</text>
@@ -196,61 +196,61 @@
 <text x="972" y="1827" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">cancel</text>
 <path class="edge" d="M907 1928 L1036 1928"/>
 <text x="971" y="1915" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">interrupted</text>
-<path class="edge" d="M1391 1928 L1421 1928 L1421 1840 L1391 1840"/>
-<text x="54" y="2003" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">When resources return, restart capture and listen for a fresh query. A missing sign is a normal detector result; a thrown camera, model or speech error is a fault.</text>
+
+<text x="54" y="2003" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Resume only if enabled and resources are ready. TODO: defer recovery received during cleanup until stopping completes.</text>
 <text x="54" y="2030" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Proposed fault policy: abort on a one-round failure; enter Suspended if the required resource remains unavailable. Never replay a stale result or prompt.</text>
 <text x="42" y="2093" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">Other branches and ownership</text>
-<text x="42" y="2121" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">If a washroom or restaurant lacks a stable candidate on 3 of 5 frames, return to Searching silently after the pulse. No distance majority → pass nil.</text>
+<text x="42" y="2121" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Fewer than 3 matched frames: announce lost sight, reset attempts, and reacquire. No distance majority → pass nil.</text>
 <text x="42" y="2147" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Vision supplies per-frame predictions; Orchestration owns tracking, batches, votes, timers and routing. Haptic already supports off, low and high.</text>
 <rect x="28" y="2182" width="1424" height="510" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="2220" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">Language detail · calls from A and C</text>
-<text x="52" y="2248" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Follow the row named at the call site. Each row shows the caller, the language work, and the event delivered back to orchestration.</text>
+<text x="52" y="2248" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Language owns clarification and model loading. Orchestration awaits a complete query and supplies search announcements.</text>
 <rect x="55" y="2306" width="210" height="95" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="68" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
 <text x="68" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request one query.</text>
 <rect x="315" y="2306" width="240" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="328" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Query · Capture</text>
+<text x="328" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Capture one utterance</text>
 <text x="328" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Transcribe until final text</text>
-<text x="328" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">or silence.</text>
+<text x="328" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Silence → capture again.</text>
 <rect x="610" y="2306" width="242" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="623" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Parse transcript</text>
-<text x="623" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Direct match → query.</text>
-<text x="623" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Empty / unsupported → nil.</text>
+<text x="623" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Qwen · same session</text>
+<text x="623" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Every nonempty utterance.</text>
+<text x="623" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Retain context across turns.</text>
 <rect x="908" y="2306" width="220" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="921" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Fallback classifier</text>
-<text x="921" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Unmatched text → classify</text>
-<text x="921" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">and parse the reply.</text>
+<text x="921" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Decode JSON once</text>
+<text x="921" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clarify → speak, then listen.</text>
+<text x="921" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ready → complete query.</text>
 <rect x="1180" y="2306" width="219" height="95" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="1193" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Return to A</text>
-<text x="1193" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Query → start round.</text>
-<text x="1193" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Nil → invalid-input path.</text>
+<text x="1193" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ready → start the search.</text>
+<text x="1193" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Error / cancellation → throw.</text>
 <path class="edge" d="M265 2355 L315 2355"/>
 <path class="edge" d="M555 2355 L610 2355"/>
 <path class="edge" d="M852 2355 L908 2355"/>
 <path class="edge" d="M1128 2355 L1180 2355"/>
-<path class="edge" d="M737 2306 L737 2284 L1288 2284 L1288 2306"/>
-<text x="1005" y="2278" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">direct match / empty / unsupported</text>
+<path class="edge" d="M1018 2306 L1018 2284 L435 2284 L435 2306"/>
+<text x="737" y="2278" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">clarify → speak → capture (same ChatSession)</text>
 <rect x="55" y="2440" width="290" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
-<text x="68" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Start a round</text>
-<text x="68" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Arm the cancel listener.</text>
-<rect x="415" y="2440" width="536" height="85" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="428" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Cancel watch · NEW Language</text>
-<text x="428" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Listen alongside searching, reading and speech playback.</text>
-<text x="428" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ignore the app’s own voice. Stop when the round ends.</text>
+<text x="68" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">First uncached model use</text>
+<text x="68" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Loading starts inside Language.</text>
+<rect x="415" y="2440" width="536" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
+<text x="428" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Model-loading feedback</text>
+<text x="428" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Say “Loading the language model. Please wait.”</text>
+<text x="428" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Screen: Loading model…; Stop remains available.</text>
 <rect x="1030" y="2440" width="369" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
-<text x="1043" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">D · Abort the round</text>
-<text x="1043" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">A spoken cancel triggers cleanup.</text>
-<text x="1043" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Return to A when resources are ready.</text>
+<text x="1043" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Continue the conversation</text>
+<text x="1043" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Load the model; process the utterance.</text>
+<text x="1043" y="2509" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Reuse the cached model on later requests.</text>
 <path class="edge" d="M345 2482 L415 2482"/>
 <path class="edge" d="M951 2482 L1030 2482"/>
-<text x="990" y="2469" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">cancel</text>
+<text x="990" y="2469" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">ready</text>
 <rect x="55" y="2558" width="290" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="68" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">C · Announcement selected</text>
 <text x="68" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Send feedback for this outcome.</text>
-<rect x="415" y="2558" width="284" height="85" rx="9" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
+<rect x="415" y="2558" width="284" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="428" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Format feedback</text>
-<text x="428" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">NEW: wrong gate, retry, failure,</text>
-<text x="428" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">or observed generic gate digit.</text>
+<text x="428" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Search start, loss, wrong gate,</text>
+<text x="428" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">retry, failure, and recognition.</text>
 <rect x="755" y="2558" width="238" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="768" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Playback · Speak</text>
 <text x="768" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Synthesize speech and</text>
@@ -262,6 +262,6 @@
 <path class="edge" d="M345 2600 L415 2600"/>
 <path class="edge" d="M699 2600 L755 2600"/>
 <path class="edge" d="M993 2600 L1050 2600"/>
-<text x="54" y="2675" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Speech and microphone faults route to D. Supporting cancel during playback requires coordinating the shared audio session and filtering app speech.</text>
-<text x="42" y="2724" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Retry assumption: the three-attempt limit applies to an unreadable gate episode. A readable wrong gate returns to search with that track suppressed while visible.</text>
+<text x="54" y="2675" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">The UI Stop button cancels speech, microphone capture, and model work. Stopping remains visible until cleanup finishes.</text>
+<text x="42" y="2724" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Three attempts per candidate; fresh votes per attempt. Re-anchor after speech. Wrong gates stay suppressed while visible.</text>
 </svg>

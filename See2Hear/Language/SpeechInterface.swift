@@ -2,10 +2,13 @@ import Foundation
 import MLX
 import MLXLLM
 import MLXLMCommon
+import Observation
 import Speech
 
 @MainActor
 protocol SpeechInterfacing {
+    var isLoadingModel: Bool { get }
+
     /// Resolves one user request, including clarification turns within this call.
     /// Keeps listening through silence until a complete query is resolved.
     /// Throw on failure or cancellation and release the microphone on exit.
@@ -28,6 +31,7 @@ enum SpeechError: LocalizedError {
     }
 }
 
+@Observable
 final class SpeechInterface: SpeechInterfacing {
     static let defaultModelID = "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
     private static let mlxCacheLimitBytes = 20 * 1024 * 1024
@@ -120,6 +124,7 @@ final class SpeechInterface: SpeechInterfacing {
     private var modelContainer: ModelContainer?
     private var activeListenSession: ListenSession?
     private var activeSpeakSession: SpeakSession?
+    private(set) var isLoadingModel = false
 
     init(
         locale: Locale = Locale(identifier: "en-US"),
@@ -148,7 +153,7 @@ final class SpeechInterface: SpeechInterfacing {
                 if let conversation {
                     session = conversation
                 } else {
-                    let container = try await self.loadOrReuseModelContainer()
+                    let container = try await self.loadOrReuseModelContainer(announceLoading: true)
                     session = ChatSession(
                         container,
                         instructions: Self.llmInstructions,
@@ -206,10 +211,16 @@ final class SpeechInterface: SpeechInterfacing {
         _ = try await loadOrReuseModelContainer()
     }
 
-    private func loadOrReuseModelContainer() async throws -> ModelContainer {
+    private func loadOrReuseModelContainer(announceLoading: Bool = false) async throws -> ModelContainer {
         try Task.checkCancellation()
         if let existing = modelContainer {
             return existing
+        }
+        isLoadingModel = true
+        defer { isLoadingModel = false }
+        if announceLoading {
+            try await speakText("Loading the language model. Please wait.")
+            try Task.checkCancellation()
         }
         Memory.cacheLimit = Self.mlxCacheLimitBytes
         let loaded = try await loadModelContainer(id: modelID)
