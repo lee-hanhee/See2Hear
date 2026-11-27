@@ -2,6 +2,7 @@ import Foundation
 
 enum QueryParseOutcome {
     case matched(SignQuery)
+    case missingGateNumber
     case unsupported
     case unmatched
 }
@@ -55,7 +56,7 @@ func parseQuery(_ transcript: String) -> QueryParseOutcome {
             }
             return .matched(query)
         }
-        return .matched(SignQuery(queryID: UUID(), label: .gate)!)
+        return .missingGateNumber
     }
 
     if hasWashroom {
@@ -95,8 +96,6 @@ func parseLLMReply(_ reply: String) -> SignQuery? {
         return SignQuery(queryID: UUID(), label: .washroom)
     case "restaurant":
         return SignQuery(queryID: UUID(), label: .restaurant)
-    case "gate":
-        return SignQuery(queryID: UUID(), label: .gate)
     default:
         let parts = normalized.split(separator: " ")
         if parts.count == 2, parts[0] == "gate", let id = Int(parts[1]) {
@@ -111,11 +110,9 @@ func parseLLMReply(_ reply: String) -> SignQuery? {
 /// - 2.0s when waiting for a gate number after "gate" or for full sentence before LLM fallback
 func silenceDelay(for transcript: String) -> TimeInterval {
     switch parseQuery(transcript) {
-    case .matched(let query):
-        return (query.label == .gate && query.requestedGateID == nil) ? 2.0 : 0.8
-    case .unsupported:
+    case .matched, .unsupported:
         return 0.8
-    case .unmatched:
+    case .missingGateNumber, .unmatched:
         return 2.0
     }
 }

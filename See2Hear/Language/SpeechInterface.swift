@@ -6,12 +6,13 @@ import Speech
 
 @MainActor
 protocol SpeechInterfacing {
-    /// Listens for one spoken request. Return nil for an unsupported request.
-    /// Throw if speech capture or recognition fails. Release the microphone
-    /// when the call ends, including on cancellation.
+    /// Resolves one user request, including clarification turns within this call.
+    /// Returns nil if the interaction doesn't yield a valid query, even after potentially
+    /// multiple conversational rounds.
+    /// Throw on failure or cancellation and release the microphone on exit.
     func listenForQuery() async throws -> SignQuery?
 
-    /// Speaks the supplied feedback. Return once playback finishes. 
+    /// Announces one event for the supplied query. Return once playback finishes.
     /// Throw on failure and stop playback on cancellation.
     func speak(_ feedback: SpeechFeedback) async throws
 }
@@ -19,11 +20,13 @@ protocol SpeechInterfacing {
 enum SpeechError: LocalizedError {
     case recognizerUnavailable
     case notAuthorized
+    case feedbackUnavailable
 
     var errorDescription: String? {
         switch self {
         case .recognizerUnavailable: "Speech recognition is unavailable."
         case .notAuthorized: "Allow microphone and speech recognition access in Settings to use See2Hear."
+        case .feedbackUnavailable: "Speech for this search event is unavailable."
         }
     }
 }
@@ -92,7 +95,7 @@ final class SpeechInterface: SpeechInterfacing {
         switch parseQuery(trimmed) {
         case .matched(let query):
             return query
-        case .unsupported:
+        case .unsupported, .missingGateNumber:
             return nil
         case .unmatched:
             return try await classifyWithLLM(trimmed)
@@ -100,7 +103,7 @@ final class SpeechInterface: SpeechInterfacing {
     }
 
     func speak(_ feedback: SpeechFeedback) async throws {
-        let text = formatFeedback(feedback)
+        guard let text = formatFeedback(feedback) else { throw SpeechError.feedbackUnavailable }
         let session = SpeakSession()
         activeSpeakSession = session
         defer { activeSpeakSession = nil }

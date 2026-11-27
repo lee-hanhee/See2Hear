@@ -1,6 +1,6 @@
 import Foundation
 
-func formatFeedback(_ feedback: SpeechFeedback) -> String {
+func formatFeedback(_ feedback: SpeechFeedback) -> String? {
     let target: String
     switch feedback.query.label {
     case .washroom:
@@ -11,12 +11,19 @@ func formatFeedback(_ feedback: SpeechFeedback) -> String {
         target = feedback.query.requestedGateID.map { "Gate \($0)" } ?? "Gate"
     }
 
-    guard feedback.outcome == .targetVisible else {
+    switch feedback.event {
+    case .stillSearching:
         return "\(target) sign is not visible."
+    case .recognized(let arrow, let distance):
+        return formatRecognizedSign(target: target, arrow: arrow, distance: distance)
+    case .searchStarted, .lostSightOfSign, .wrongGate, .retryingRecognition, .recognitionFailed:
+        return nil
     }
+}
 
+private func formatRecognizedSign(target: String, arrow: ArrowDirection?, distance: SignDistanceBand?) -> String {
     var parts: [String] = []
-    switch feedback.distanceToSign {
+    switch distance {
     case .near:
         parts.append("\(target) sign is less than 5 meters away.")
     case .medium:
@@ -27,7 +34,7 @@ func formatFeedback(_ feedback: SpeechFeedback) -> String {
         parts.append("\(target) sign is visible.")
     }
 
-    switch feedback.arrowDirection {
+    switch arrow {
     case .left:
         parts.append("Follow the arrow to the left.")
     case .right:

@@ -85,11 +85,7 @@ struct SignBatch {
                 // after three unreadable attempts, announce failure. Abort until these prompts exist.
                 return .abort
             }
-            guard let requested = query.requestedGateID else {
-                // TODO(Language): SpeechFeedback needs an observed digit to announce a generic gate.
-                return .abort
-            }
-            guard number == requested else {
+            guard number == query.requestedGateID else {
                 // TODO(Language): announce the observed wrong gate, then suppress its track and resume searching.
                 return .abort
             }
@@ -99,7 +95,7 @@ struct SignBatch {
             voters = observations
             if case .arrow(let direction) = majority(observations.compactMap(\.reading)) { arrow = direction }
         }
-        return .speak(SpeechFeedback(query: query, outcome: .targetVisible, arrowDirection: arrow,
-                                     distanceToSign: majority(voters.map(\.distance))))
+        let event = SearchFeedbackEvent.recognized(arrowDirection: arrow, distanceToSign: majority(voters.map(\.distance)))
+        return .speak(SpeechFeedback(query: query, event: event))
     }
 }

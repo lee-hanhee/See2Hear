@@ -13,8 +13,7 @@ struct OrchestrationTests {
         try await until { rig.language.listenCount == 2 }
         let feedback = try #require(rig.language.spoken.first)
         #expect(feedback.query.queryID == rig.query.queryID)
-        #expect(feedback.arrowDirection == .left)
-        #expect(feedback.distanceToSign == nil)
+        #expect(feedback.event == .recognized(arrowDirection: .left, distanceToSign: nil))
         #expect(rig.language.spoken.count == 1)
         #expect(await rig.vision.readBoxes == [32, 33, 34, 35, 36])
         #expect(rig.haptics.changes.map(\.strength).starts(with: [.low, .off, .low, .high, .off]))
@@ -100,7 +99,7 @@ struct OrchestrationTests {
             Issue.record("Expected a confirmed Gate 4")
             return
         }
-        #expect(feedback.distanceToSign == nil)
+        #expect(feedback.event == .recognized(arrowDirection: nil, distanceToSign: nil))
         batch.observations.removeFirst()
         guard case .abort = batch.outcome(for: query) else { Issue.record("Unreadable gate must abort"); return }
     }
@@ -113,8 +112,7 @@ struct OrchestrationTests {
             Issue.record("Expected a visible restaurant")
             return
         }
-        #expect(feedback.arrowDirection == nil)
-        #expect(feedback.distanceToSign == .near)
+        #expect(feedback.event == .recognized(arrowDirection: nil, distanceToSign: .near))
         batch.observations.removeLast()
         guard case .searchAgain = batch.outcome(for: query) else { Issue.record("Expected reacquisition"); return }
     }
