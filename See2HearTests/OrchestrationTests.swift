@@ -81,11 +81,82 @@ struct OrchestrationTests {
         try await until { rig.haptics.changes.last?.strength == .high }
         rig.coordinator.stop(reason: "Interrupted")
         #expect(rig.haptics.changes.last?.strength == .off)
-        #expect(rig.coordinator.phase == .suspended("Interrupted"))
+        #expect(rig.coordinator.phase == .stopping)
         rig.coordinator.start()
+        #expect(rig.language.listenCount == 1)
         await rig.vision.releaseReaders()
+        try await until { rig.coordinator.phase == .suspended("Interrupted") }
+        rig.coordinator.resumeIfEnabled()
         try await until { rig.language.listenCount == 2 }
         #expect(rig.language.spoken.isEmpty)
+    }
+
+    @Test("Launch waits for Start; automatic resume cannot undo button Stop")
+    func explicitStartAndStop() async throws {
+        let rig = try RoundFixture(label: .washroom)
+        rig.coordinator.resumeIfEnabled()
+        #expect(rig.language.listenCount == 0)
+        #expect(rig.coordinator.phase == .stopped)
+        rig.start()
+        defer { rig.coordinator.stop() }
+        try await until { rig.language.listenCount == 2 }
+        rig.coordinator.stop()
+        #expect(!rig.coordinator.isEnabled)
+        #expect(rig.coordinator.phase == .stopping)
+        try await until { rig.coordinator.phase == .stopped }
+        rig.coordinator.resumeIfEnabled()
+        #expect(rig.language.listenCount == 2)
+        rig.coordinator.start()
+        try await until { rig.language.listenCount == 3 }
+        #expect(rig.coordinator.isEnabled)
+    }
+
+    @Test("Button Stop disables the session before delayed model work finishes")
+    func stopDuringModelWork() async throws {
+        let rig = try RoundFixture(label: .gate, requestedGate: 5)
+        rig.language.delayQuery = true
+        rig.start()
+        defer { rig.coordinator.stop() }
+        try await until { rig.language.queryIsPending }
+        rig.coordinator.stop()
+        #expect(rig.coordinator.phase == .stopping)
+        #expect(!rig.coordinator.isEnabled)
+        #expect(rig.haptics.changes.last?.strength == .off)
+        rig.coordinator.start()
+        rig.coordinator.resumeIfEnabled()
+        #expect(rig.language.listenCount == 1)
+        rig.language.releaseQuery()
+        try await until { rig.coordinator.phase == .stopped }
+        #expect(rig.language.spoken.isEmpty)
+        rig.language.delayQuery = false
+        rig.coordinator.start()
+        try await until { rig.language.listenCount == 2 }
+    }
+
+    @Test("Button Stop preempts reading or result playback", arguments: ["read", "playback"])
+    func stopDuringSearch(stage: String) async throws {
+        let rig = try RoundFixture(label: .restaurant, delayReaders: stage == "read")
+        rig.language.holdPlayback = stage == "playback"
+        rig.start()
+        defer { rig.coordinator.stop() }
+        if stage == "read" {
+            try await until { rig.haptics.changes.last?.strength == .high }
+        } else {
+            try await until { rig.coordinator.phase == .speaking }
+        }
+        rig.coordinator.stop()
+        #expect(rig.coordinator.phase == .stopping)
+        #expect(!rig.coordinator.isEnabled)
+        #expect(rig.haptics.changes.last?.strength == .off)
+        await rig.vision.releaseReaders()
+        try await until { rig.coordinator.phase == .stopped }
+        if stage == "playback" {
+            #expect(rig.language.playbackWasCancelled)
+        } else {
+            #expect(rig.language.spoken.isEmpty)
+        }
+        rig.coordinator.resumeIfEnabled()
+        #expect(rig.language.listenCount == 1)
     }
 
     @Test("A numbered gate only uses distance votes from matching digits")
@@ -186,11 +257,20 @@ private final class LanguageFixture: SpeechInterfacing {
     var listenCount = 0
     var spoken: [SpeechFeedback] = []
     var spokeAt: ContinuousClock.Instant?
+    var delayQuery = false
+    var queryIsPending: Bool { pendingQuery != nil }
+    private var pendingQuery: CheckedContinuation<Void, Never>?
+
+    func releaseQuery() {
+        pendingQuery?.resume()
+        pendingQuery = nil
+    }
 
     init(query: SignQuery) { self.query = query }
 
     func listenForQuery() async throws -> SignQuery? {
         listenCount += 1
+        if delayQuery { await withCheckedContinuation { pendingQuery = $0 } }
         if listenCount == 1 { return invalidInput ? nil : query }
         try await Task.sleep(for: .seconds(60))
         return nil

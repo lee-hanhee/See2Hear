@@ -6,11 +6,13 @@ import os
 @Observable
 final class SearchCoordinator {
     enum Phase: Equatable {
-        case stopped, starting, listening, searching, reading, speaking
+        case stopped, starting, listening, searching, reading, speaking, stopping
         case suspended(String)
     }
 
     private(set) var phase: Phase = .stopped
+    private(set) var isEnabled = false
+    private var suspensionReason: String?
     private let camera: any FrameCapturing
     private let speech: any SpeechInterfacing
     private let vision: any VisionModelInvoking
@@ -32,39 +34,48 @@ final class SearchCoordinator {
     func start() {
         switch phase {
         case .stopped, .suspended: break
-        case .starting, .listening, .searching, .reading, .speaking: return
+        case .starting, .listening, .searching, .reading, .speaking, .stopping: return
         }
+        isEnabled = true
+        suspensionReason = nil
         phase = .starting
-        let previous = sessionTask
         sessionTask = Task {
-            // Let cancelled speech and camera operations release their resources before rearming.
-            await previous?.value
-            guard !Task.isCancelled else { return }
-            defer { camera.stop() }
-            do {
-                try await camera.start()
-                while !Task.isCancelled {
-                    phase = .listening
-                    let round = Task { try await self.runRound() }
-                    roundTask = round
-                    do {
-                        try await round.value
-                    } catch is CancellationError {
-                        // A cancelled round returns to listening unless the whole session was stopped.
-                    } catch {
-                        guard !Task.isCancelled, !round.isCancelled else { continue }
-                        if phase == .listening || Self.resourceUnavailable(error) { throw error }
-                        logger.error("Search round ended: \(error.localizedDescription, privacy: .public)")
-                    }
-                    roundTask = nil
-                    resetOutputs()
-                }
-            } catch {
-                guard !Task.isCancelled else { return }
-                roundTask = nil
+            defer {
+                camera.stop()
                 resetOutputs()
-                phase = .suspended(error.localizedDescription)
+                roundTask = nil
+                sessionTask = nil
+                phase = suspensionReason.map(Phase.suspended) ?? .stopped
             }
+            do {
+                try await runSession()
+            } catch {
+                if !Task.isCancelled { stop(reason: error.localizedDescription) }
+            }
+        }
+    }
+
+    func resumeIfEnabled() {
+        if isEnabled { start() }
+    }
+
+    private func runSession() async throws {
+        try await camera.start()
+        while !Task.isCancelled {
+            phase = .listening
+            let round = Task { try await self.runRound() }
+            roundTask = round
+            do {
+                try await round.value
+            } catch is CancellationError {
+                // Cancelling one round returns to listening while the session remains enabled.
+            } catch {
+                guard !Task.isCancelled, !round.isCancelled else { continue }
+                if phase == .listening || Self.resourceUnavailable(error) { throw error }
+                logger.error("Search round ended: \(error.localizedDescription, privacy: .public)")
+            }
+            roundTask = nil
+            resetOutputs()
         }
     }
 
@@ -85,17 +96,18 @@ final class SearchCoordinator {
     }
 
     func cancelRound() {
-        // TODO(Language): route a spoken cancel event here, including during playback.
-        // Until Language can share the audio session, the Cancel button is the round's cancel source.
         roundTask?.cancel()
         resetOutputs()
     }
 
     func stop(reason: String? = nil) {
+        if reason == nil { isEnabled = false }
+        suspensionReason = reason
+        phase = .stopping
         sessionTask?.cancel()
         cancelRound()
         camera.stop()
-        phase = reason.map(Phase.suspended) ?? .stopped
+        if sessionTask == nil { phase = reason.map(Phase.suspended) ?? .stopped }
     }
 
     private func resetOutputs() {
@@ -105,10 +117,8 @@ final class SearchCoordinator {
 
     private func runRound() async throws {
         try Task.checkCancellation()
-        guard let query = try await speech.listenForQuery() else {
-            // TODO(Language): distinguish silence from unsupported input and provide clarification. Abort this round.
-            return
-        }
+        guard let query = try await speech.listenForQuery() else { return }
+        try Task.checkCancellation()
         while true {
             try Task.checkCancellation()
             phase = .searching
