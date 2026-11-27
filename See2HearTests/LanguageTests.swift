@@ -104,6 +104,26 @@ struct LanguageTests {
         #expect(query.requestedGateID == gateID)
     }
 
+    @Test("Extended conversations continue until a complete query arrives")
+    func extendedConversation() async throws {
+        var turns = 0
+        var clarifications = 0
+        let query = try await resolveQueryConversation(
+            capture: { "I am still deciding" },
+            respond: { _ in
+                turns += 1
+                return turns <= 100
+                    ? #"{"kind":"clarify","message":"Which destination would you like?"}"#
+                    : #"{"kind":"ready","label":"gate","gateID":5}"#
+            },
+            speak: { _ in clarifications += 1 }
+        )
+        #expect(turns == 101)
+        #expect(clarifications == 100)
+        #expect(query.label == .gate)
+        #expect(query.requestedGateID == 5)
+    }
+
     @Test("Silence skips the model and does not repeat a clarification")
     @MainActor
     func conversationSilence() async throws {
