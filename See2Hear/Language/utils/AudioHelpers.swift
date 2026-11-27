@@ -30,9 +30,13 @@ final class ListenSession: @unchecked Sendable {
     private var isCompleted = false
 
     private let listeningHaptics: Bool
+    /// Receives each partial and final transcript on the recognizer's callback queue.
+    private let onTranscript: @Sendable (String) -> Void
 
-    init(recognizer: SFSpeechRecognizer, listeningHaptics: Bool) {
+    init(recognizer: SFSpeechRecognizer, listeningHaptics: Bool,
+         onTranscript: @escaping @Sendable (String) -> Void = { _ in }) {
         self.listeningHaptics = listeningHaptics
+        self.onTranscript = onTranscript
         self.recognizer = recognizer
         self.request.shouldReportPartialResults = true
         self.request.requiresOnDeviceRecognition = true
@@ -101,6 +105,7 @@ final class ListenSession: @unchecked Sendable {
                     self.lock.lock()
                     self.latestTranscript = text
                     self.lock.unlock()
+                    self.onTranscript(text)
 
                     if result.isFinal {
                         self.finish()

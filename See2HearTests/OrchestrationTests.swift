@@ -472,6 +472,7 @@ private final class LanguageFixture: SpeechInterfacing {
     var invalidInput = false
     var heldEvent: SearchFeedbackEvent?
     var isLoadingModel = false
+    var heardText = ""
     var events: [SearchFeedbackEvent] { spoken.map(\.event) }
     private var playback: AsyncStream<Void>.Continuation?
     var playbackWasCancelled = false

@@ -13,6 +13,15 @@ final class SearchCoordinator {
     private(set) var phase: Phase = .stopped
     private(set) var isEnabled = false
     var isLoadingModel: Bool { speech.isLoadingModel }
+    var heardText: String { speech.heardText }
+
+    /// Debug aid: what the detector found in the latest processed frame.
+    struct ScanPreview {
+        let detections: [SignBoundingBox]
+        /// The candidate being centered or read, if any.
+        let target: SignBoundingBox?
+    }
+    private(set) var scanPreview: ScanPreview?
     private var suspensionReason: String?
     /// Recovery requested while the previous session was still cleaning up.
     private var resumeAfterCleanup = false
@@ -127,6 +136,7 @@ final class SearchCoordinator {
     private func resetOutputs() {
         camera.discardFrames()
         haptics.apply(HapticFeedback(strength: .off))
+        scanPreview = nil
     }
 
     private func runRound() async throws {
@@ -183,6 +193,7 @@ final class SearchCoordinator {
             let boxes = try await vision.detect(frame: sample.frame, category: query.label)
             try Task.checkCancellation()
             let box = rejected.eligible(boxes, at: sample.timestamp).first
+            scanPreview = ScanPreview(detections: boxes, target: box)
             if let target = streak.observe(box, at: sample.timestamp) { return target }
             haptics.apply(HapticFeedback(strength: box == nil ? .off : .low))
         }
@@ -206,7 +217,9 @@ final class SearchCoordinator {
             let boxes = try await vision.detect(frame: sample.frame, category: query.label)
             try Task.checkCancellation()
             let eligible = rejected.eligible(boxes, at: sample.timestamp)
-            if let matched = track.matching(eligible, at: sample.timestamp, afterPlayback: reanchor) {
+            let matching = track.matching(eligible, at: sample.timestamp, afterPlayback: reanchor)
+            scanPreview = ScanPreview(detections: boxes, target: matching?.box)
+            if let matched = matching {
                 track = matched
                 reanchor = false
                 let reading = try await vision.readSign(frame: sample.frame, category: query.label, box: matched.box)

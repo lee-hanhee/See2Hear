@@ -8,6 +8,8 @@ import Speech
 @MainActor
 protocol SpeechInterfacing {
     var isLoadingModel: Bool { get }
+    /// The live transcript of the current or most recent utterance, for on-screen display.
+    var heardText: String { get }
 
     /// Resolves one user request, including clarification turns within this call.
     /// Waits through silence and clarification turns without a conversation timeout.
@@ -125,6 +127,7 @@ final class SpeechInterface: SpeechInterfacing {
     private var activeListenSession: ListenSession?
     private var activeSpeakSession: SpeakSession?
     private(set) var isLoadingModel = false
+    private(set) var heardText = ""
 
     init(
         locale: Locale = Locale(identifier: "en-US"),
@@ -184,7 +187,10 @@ final class SpeechInterface: SpeechInterfacing {
             throw SpeechError.recognizerUnavailable
         }
 
-        let session = ListenSession(recognizer: recognizer, listeningHaptics: listeningHaptics)
+        heardText = ""
+        let session = ListenSession(recognizer: recognizer, listeningHaptics: listeningHaptics) { text in
+            Task { @MainActor [weak self] in self?.heardText = text }
+        }
         activeListenSession = session
         defer { activeListenSession = nil }
 
