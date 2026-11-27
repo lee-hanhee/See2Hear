@@ -170,7 +170,34 @@ struct LanguageTests {
 
     // MARK: - Feedback Formatting (formatFeedback)
 
-    @Test("Formats visible and non-visible SpeechFeedback sentences")
+    @Test("Uses natural destination wording for search announcements", arguments: [
+        (SignLabel.gate, Optional(5), "Gate 5"),
+        (SignLabel.washroom, nil, "the washroom"),
+        (SignLabel.restaurant, nil, "a restaurant")
+    ])
+    func searchAnnouncements(label: SignLabel, gateID: Int?, destination: String) throws {
+        let query = try #require(SignQuery(queryID: UUID(), label: label, requestedGateID: gateID))
+        #expect(formatFeedback(SpeechFeedback(query: query, event: .searchStarted))
+            == "Confirmed. Let’s look for \(destination).")
+        #expect(formatFeedback(SpeechFeedback(query: query, event: .stillSearching))
+            == "Still looking for \(destination). Continue to move your phone slowly.")
+    }
+
+    @Test("Announces lost signs, wrong gates, retries, and recognition failure", arguments: [
+        (SearchFeedbackEvent.lostSightOfSign, "I lost sight of the sign. Pan back slowly."),
+        (.wrongGate(observedGateID: 3), "This sign says Gate 3. Keep panning slowly to look for Gate 5."),
+        (.retryingRecognition(retryNumber: .first),
+         "I couldn’t read the sign. Hold your phone still while I try again."),
+        (.retryingRecognition(retryNumber: .second),
+         "I still couldn’t read the sign. Hold your phone still while I try once more."),
+        (.recognitionFailed, "I couldn’t read the sign. Please tell me what you’d like me to look for.")
+    ])
+    func searchEventAnnouncements(event: SearchFeedbackEvent, expected: String) throws {
+        let query = try #require(SignQuery(queryID: UUID(), label: .gate, requestedGateID: 5))
+        #expect(formatFeedback(SpeechFeedback(query: query, event: event)) == expected)
+    }
+
+    @Test("Formats recognized signs with available distance and direction")
     func feedbackFormatting() throws {
         let gate4 = try #require(SignQuery(queryID: UUID(), label: .gate, requestedGateID: 4))
         let washroom = try #require(SignQuery(queryID: UUID(), label: .washroom))
@@ -193,12 +220,6 @@ struct LanguageTests {
             event: .recognized(arrowDirection: nil, distanceToSign: nil)
         )
         #expect(formatFeedback(visibleNoMetadata) == "Restaurant sign is visible.")
-
-        let notVisible = SpeechFeedback(
-            query: gate4,
-            event: .stillSearching
-        )
-        #expect(formatFeedback(notVisible) == "Gate 4 sign is not visible.")
 
         let visibleFarRight = SpeechFeedback(
             query: gate4,

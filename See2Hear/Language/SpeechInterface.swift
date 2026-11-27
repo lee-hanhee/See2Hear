@@ -20,13 +20,11 @@ protocol SpeechInterfacing {
 enum SpeechError: LocalizedError {
     case recognizerUnavailable
     case notAuthorized
-    case feedbackUnavailable
 
     var errorDescription: String? {
         switch self {
         case .recognizerUnavailable: "Speech recognition is unavailable."
         case .notAuthorized: "Allow microphone and speech recognition access in Settings to use See2Hear."
-        case .feedbackUnavailable: "Speech for this search event is unavailable."
         }
     }
 }
@@ -103,7 +101,7 @@ final class SpeechInterface: SpeechInterfacing {
     }
 
     func speak(_ feedback: SpeechFeedback) async throws {
-        guard let text = formatFeedback(feedback) else { throw SpeechError.feedbackUnavailable }
+        let text = formatFeedback(feedback)
         let session = SpeakSession()
         activeSpeakSession = session
         defer { activeSpeakSession = nil }
