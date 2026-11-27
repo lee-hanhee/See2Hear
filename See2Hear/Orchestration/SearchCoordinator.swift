@@ -14,6 +14,8 @@ final class SearchCoordinator {
     private(set) var isEnabled = false
     var isLoadingModel: Bool { speech.isLoadingModel }
     private var suspensionReason: String?
+    /// Recovery requested while the previous session was still cleaning up.
+    private var resumeAfterCleanup = false
     private let camera: any FrameCapturing
     private let speech: any SpeechInterfacing
     private let vision: any VisionModelInvoking
@@ -47,6 +49,10 @@ final class SearchCoordinator {
                 roundTask = nil
                 sessionTask = nil
                 phase = suspensionReason.map(Phase.suspended) ?? .stopped
+                if resumeAfterCleanup {
+                    resumeAfterCleanup = false
+                    resumeIfEnabled()
+                }
             }
             do {
                 try await runSession()
@@ -56,8 +62,14 @@ final class SearchCoordinator {
         }
     }
 
+    /// Restarts an enabled session. During cleanup, the restart waits until cleanup finishes.
     func resumeIfEnabled() {
-        if isEnabled { start() }
+        guard isEnabled else { return }
+        if phase == .stopping {
+            resumeAfterCleanup = true
+        } else {
+            start()
+        }
     }
 
     private func runSession() async throws {
@@ -103,6 +115,7 @@ final class SearchCoordinator {
 
     func stop(reason: String? = nil) {
         if reason == nil { isEnabled = false }
+        resumeAfterCleanup = false
         suspensionReason = reason
         phase = .stopping
         sessionTask?.cancel()

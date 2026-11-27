@@ -205,6 +205,28 @@ struct OrchestrationTests {
         #expect(rig.language.events == [.searchStarted])
     }
 
+    @Test("Recovery during cleanup resumes once cleanup finishes unless another stop follows",
+          arguments: [false, true])
+    func recoveryDuringCleanup(interruptedAgain: Bool) async throws {
+        let rig = try RoundFixture(label: .gate, requestedGate: 1, delayReaders: true)
+        rig.start()
+        defer { rig.coordinator.stop() }
+        try await until { rig.haptics.changes.last?.strength == .high }
+        rig.coordinator.stop(reason: "Interrupted")
+        rig.coordinator.resumeIfEnabled()
+        #expect(rig.coordinator.phase == .stopping)
+        #expect(rig.language.listenCount == 1)
+        if interruptedAgain { rig.coordinator.stop(reason: "Interrupted again") }
+        await rig.vision.releaseReaders()
+        if interruptedAgain {
+            try await until { rig.coordinator.phase == .suspended("Interrupted again") }
+            #expect(rig.language.listenCount == 1)
+        } else {
+            try await until { rig.language.listenCount == 2 }
+            #expect(rig.coordinator.isEnabled)
+        }
+    }
+
     @Test("Launch waits for Start; automatic resume cannot undo button Stop")
     func explicitStartAndStop() async throws {
         let rig = try RoundFixture(label: .washroom)

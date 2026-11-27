@@ -1,3 +1,4 @@
+import Accessibility
 import AVFoundation
 import Combine
 import SwiftUI
@@ -28,6 +29,10 @@ private struct SearchView: View {
 
     @ScaledMetric(relativeTo: .largeTitle) private var actionSize: CGFloat = 72
 
+    // Fixed colours keep white text above 7:1 contrast in light and dark mode.
+    private static let startColor = Color(red: 0.0, green: 0.25, blue: 0.70)
+    private static let stopColor = Color(red: 0.65, green: 0.05, blue: 0.05)
+
     private var canStart: Bool {
         switch coordinator.phase {
         case .stopped, .suspended: true
@@ -53,34 +58,45 @@ private struct SearchView: View {
         }
     }
 
+    private var isDisabled: Bool {
+        coordinator.phase == .stopping || (canStart && (cameraInterrupted || audioInterrupted))
+    }
+
     var body: some View {
-        Button {
-            if canStart {
-                if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.start() }
-            } else {
-                coordinator.stop()
-            }
-        } label: {
+        Button(action: toggle) {
             VStack(spacing: 24) {
-                Text(actionLabel).font(.system(size: actionSize, weight: .bold, design: .rounded))
-                Text(status).font(.title2)
+                Text(actionLabel)
+                    .font(.system(size: actionSize, weight: .bold, design: .rounded))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.4)
+                Text(status)
+                    .font(.title2)
+                    .minimumScaleFactor(0.6)
             }
             .multilineTextAlignment(.center)
             .padding(32)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .foregroundStyle(.white)
-            .background(canStart ? Color.blue : Color(red: 0.65, green: 0.05, blue: 0.05))
+            .background(canStart ? Self.startColor : Self.stopColor)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .ignoresSafeArea()
-        .disabled(coordinator.phase == .stopping || (canStart && (cameraInterrupted || audioInterrupted)))
+        .disabled(isDisabled)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(actionLabel)
         .accessibilityValue(status)
-        .accessibilityHint(canStart ? "Starts a new sign request" : "Ends the current session")
-        // TODO(UI): review VoiceOver labels, status changes, and full-screen button activation.
-        // TODO(UI): refine contrast and check large-text layout across screen sizes.
+        .accessibilityHint(canStart ? "Starts listening for a sign request" : "Ends the current session")
+        // VoiceOver stays quiet after Start so it doesn't talk over the microphone or the app's speech.
+        .accessibilityAddTraits(canStart ? .startsMediaSession : [])
+        // The two-finger double-tap toggles the session from anywhere on screen.
+        .accessibilityAction(.magicTap) { if !isDisabled { toggle() } }
+        // The app speaks its own search feedback; VoiceOver only announces why a session ended unexpectedly.
+        .onChange(of: coordinator.phase) { _, phase in
+            if case .suspended(let reason) = phase {
+                AccessibilityNotification.Announcement(reason).post()
+            }
+        }
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { resumeIfAvailable() }
             if phase == .background { coordinator.stop(reason: "App in background.") }
@@ -112,8 +128,15 @@ private struct SearchView: View {
         NotificationCenter.default.publisher(for: name, object: object).receive(on: DispatchQueue.main)
     }
 
+    private func toggle() {
+        if canStart {
+            if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.start() }
+        } else {
+            coordinator.stop()
+        }
+    }
+
     private func resumeIfAvailable() {
-        // TODO(Orchestration): defer recovery received during stopping until cleanup finishes, if still enabled.
         if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.resumeIfEnabled() }
     }
 }
