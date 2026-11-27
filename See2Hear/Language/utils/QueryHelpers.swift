@@ -2,6 +2,7 @@ import Foundation
 
 enum QueryParseOutcome {
     case matched(SignQuery)
+    case missingGateNumber
     case unsupported
     case unmatched
 }
@@ -55,7 +56,7 @@ func parseQuery(_ transcript: String) -> QueryParseOutcome {
             }
             return .matched(query)
         }
-        return .matched(SignQuery(queryID: UUID(), label: .gate)!)
+        return .missingGateNumber
     }
 
     if hasWashroom {
@@ -83,39 +84,14 @@ private func extractGateNumber(from tokens: [String], gateIndex: Int) -> Int? {
     return nil
 }
 
-/// Strictly parses the constrained 10-label LLM output without heuristic keyword scanning.
-func parseLLMReply(_ reply: String) -> SignQuery? {
-    let normalized = reply
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-        .lowercased()
-        .trimmingCharacters(in: .punctuationCharacters)
-
-    switch normalized {
-    case "washroom":
-        return SignQuery(queryID: UUID(), label: .washroom)
-    case "restaurant":
-        return SignQuery(queryID: UUID(), label: .restaurant)
-    case "gate":
-        return SignQuery(queryID: UUID(), label: .gate)
-    default:
-        let parts = normalized.split(separator: " ")
-        if parts.count == 2, parts[0] == "gate", let id = Int(parts[1]) {
-            return SignQuery(queryID: UUID(), label: .gate, requestedGateID: id)
-        }
-        return nil
-    }
-}
-
 /// Adaptive silence delay in seconds after the most recent word:
 /// - 0.8s once a complete query is matched (washroom, restaurant, or gate with number)
-/// - 2.0s when waiting for a gate number after "gate" or for full sentence before LLM fallback
+/// - 2.0s when waiting for a gate number after "gate" or for a full utterance
 func silenceDelay(for transcript: String) -> TimeInterval {
     switch parseQuery(transcript) {
-    case .matched(let query):
-        return (query.label == .gate && query.requestedGateID == nil) ? 2.0 : 0.8
-    case .unsupported:
+    case .matched, .unsupported:
         return 0.8
-    case .unmatched:
+    case .missingGateNumber, .unmatched:
         return 2.0
     }
 }

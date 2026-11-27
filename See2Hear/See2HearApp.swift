@@ -26,30 +26,64 @@ private struct SearchView: View {
     @State private var cameraInterrupted = false
     @State private var audioInterrupted = false
 
-    var body: some View {
-        VStack(spacing: 20) {
-            switch coordinator.phase {
-            case .stopped, .starting: Text("Starting camera…")
-            case .listening: Text("Listening for a sign request")
-            case .searching: Text("Searching for the sign")
-            case .reading: Text("Reading the sign")
-            case .speaking: Text("Speaking the result")
-            case .suspended(let reason):
-                Text(reason)
-                if !cameraInterrupted && !audioInterrupted {
-                    Button("Try again") { resumeIfAvailable() }
-                }
-            }
-            switch coordinator.phase {
-            case .searching, .reading, .speaking:
-                Button("Cancel search") { coordinator.cancelRound() }
-            default: EmptyView()
-            }
+    @ScaledMetric(relativeTo: .largeTitle) private var actionSize: CGFloat = 72
+
+    private var canStart: Bool {
+        switch coordinator.phase {
+        case .stopped, .suspended: true
+        case .starting, .listening, .searching, .reading, .speaking, .stopping: false
         }
-        .padding()
+    }
+
+    private var actionLabel: String {
+        if coordinator.phase == .stopping { return "Stopping…" }
+        return canStart ? "Start" : "Stop"
+    }
+
+    private var status: String {
+        switch coordinator.phase {
+        case .stopped: "Ready for a new request"
+        case .starting: "Starting"
+        case .listening: coordinator.isLoadingModel ? "Loading model…" : "Listening for your request"
+        case .searching: "Searching for the sign"
+        case .reading: "Reading the sign"
+        case .speaking: "Speaking the result"
+        case .stopping: "Finishing cleanup"
+        case .suspended(let reason): reason
+        }
+    }
+
+    var body: some View {
+        Button {
+            if canStart {
+                if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.start() }
+            } else {
+                coordinator.stop()
+            }
+        } label: {
+            VStack(spacing: 24) {
+                Text(actionLabel).font(.system(size: actionSize, weight: .bold, design: .rounded))
+                Text(status).font(.title2)
+            }
+            .multilineTextAlignment(.center)
+            .padding(32)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(.white)
+            .background(canStart ? Color.blue : Color(red: 0.65, green: 0.05, blue: 0.05))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .ignoresSafeArea()
+        .disabled(coordinator.phase == .stopping || (canStart && (cameraInterrupted || audioInterrupted)))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(actionLabel)
+        .accessibilityValue(status)
+        .accessibilityHint(canStart ? "Starts a new sign request" : "Ends the current session")
+        // TODO(UI): review VoiceOver labels, status changes, and full-screen button activation.
+        // TODO(UI): refine contrast and check large-text layout across screen sizes.
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active { resumeIfAvailable() }
-            if phase == .background { coordinator.stop() }
+            if phase == .background { coordinator.stop(reason: "App in background.") }
         }
         .onReceive(notifications(AVCaptureSession.wasInterruptedNotification, from: session)) { _ in
             cameraInterrupted = true
@@ -79,6 +113,7 @@ private struct SearchView: View {
     }
 
     private func resumeIfAvailable() {
-        if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.start() }
+        // TODO(Orchestration): defer recovery received during stopping until cleanup finishes, if still enabled.
+        if scenePhase == .active && !cameraInterrupted && !audioInterrupted { coordinator.resumeIfEnabled() }
     }
 }
