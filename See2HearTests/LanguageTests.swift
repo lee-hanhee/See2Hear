@@ -4,87 +4,7 @@ import Testing
 
 struct LanguageTests {
 
-    // MARK: - Direct Keyword Parsing (parseQuery)
-
-    @Test("Matches washroom synonyms", arguments: [
-        "where is the washroom",
-        "I need a restroom please",
-        "find the men's bathroom",
-        "nearest toilet"
-    ])
-    func washroomQueries(transcript: String) {
-        guard case .matched(let query) = parseQuery(transcript) else {
-            Issue.record("Expected .matched for '\(transcript)'")
-            return
-        }
-        #expect(query.label == .washroom)
-        #expect(query.requestedGateID == nil)
-    }
-
-    @Test("Matches restaurant synonyms", arguments: [
-        "find a restaurant",
-        "where can I get coffee or food",
-        "places to eat lunch"
-    ])
-    func restaurantQueries(transcript: String) {
-        guard case .matched(let query) = parseQuery(transcript) else {
-            Issue.record("Expected .matched for '\(transcript)'")
-            return
-        }
-        #expect(query.label == .restaurant)
-        #expect(query.requestedGateID == nil)
-    }
-
-    @Test("Recognizes a gate request that still needs a number")
-    func genericGateQuery() {
-        guard case .missingGateNumber = parseQuery("I have 2 minutes to find a gate") else {
-            Issue.record("Expected a missing gate number")
-            return
-        }
-    }
-
-    @Test("Matches numbered gate queries 1 through 6", arguments: [
-        ("where is gate 1", 1),
-        ("gate to", 2),
-        ("take me to gate number three", 3),
-        ("where is gate 4", 4),
-        ("gate for", 4),
-        ("gate five please", 5),
-        ("looking for gate six", 6),
-        ("gate 6", 6)
-    ])
-    func numberedGateQueries(transcript: String, expectedGate: Int) {
-        guard case .matched(let query) = parseQuery(transcript) else {
-            Issue.record("Expected .matched for '\(transcript)'")
-            return
-        }
-        #expect(query.label == .gate)
-        #expect(query.requestedGateID == expectedGate)
-    }
-
-    @Test("Handles capitalization and everyday punctuation in queries")
-    func queryCapitalizationAndPunctuation() {
-        if case .matched(let washroom) = parseQuery("Where is the Washroom?") {
-            #expect(washroom.label == .washroom)
-            #expect(washroom.requestedGateID == nil)
-        } else {
-            Issue.record("Expected .matched washroom query")
-        }
-
-        if case .matched(let restaurant) = parseQuery("Find a Restaurant, please!") {
-            #expect(restaurant.label == .restaurant)
-            #expect(restaurant.requestedGateID == nil)
-        } else {
-            Issue.record("Expected .matched restaurant query")
-        }
-
-        if case .matched(let gate) = parseQuery("GATE 3.") {
-            #expect(gate.label == .gate)
-            #expect(gate.requestedGateID == 3)
-        } else {
-            Issue.record("Expected .matched gate query")
-        }
-    }
+    // MARK: - Query Contract
 
     @Test("Requires a number for gates and preserves the query ID")
     func signQueryConstruction() throws {
@@ -98,74 +18,235 @@ struct LanguageTests {
         #expect(numberedGate.requestedGateID == 6)
     }
 
-    @Test("Rejects out-of-range gate numbers as .unsupported", arguments: [
-        "gate zero",
-        "where is gate 7",
-        "gate number 9"
+    // MARK: - Conversation Replies
+
+    @Test("Decodes supported completed destinations", arguments: [
+        (#"{"kind":"ready","label":"washroom"}"#, SignLabel.washroom, Optional<Int>.none),
+        (#"{"kind":"ready","label":"restaurant"}"#, .restaurant, nil),
+        (#"{"kind":"ready","label":"gate","gateID":1}"#, .gate, 1),
+        (#"{"kind":"ready","label":"gate","gateID":6}"#, .gate, 6)
     ])
-    func unsupportedGateNumbers(transcript: String) {
-        if case .unsupported = parseQuery(transcript) {
-            // Expected
-        } else {
-            Issue.record("Expected .unsupported for '\(transcript)'")
+    func completedReplies(reply: String, label: SignLabel, gateID: Int?) throws {
+        guard case .ready(let query) = try decodeConversationReply(reply) else {
+            Issue.record("Expected a complete query")
+            return
         }
+        #expect(query.label == label)
+        #expect(query.requestedGateID == gateID)
     }
 
-    @Test("Routes indirect or multi-category queries to .unmatched for LLM fallback", arguments: [
-        "I am starving",
-        "I need to freshen up",
-        "my flight is boarding soon",
-        "where is the washroom near gate 2",
-        ""
-    ])
-    func unmatchedQueries(transcript: String) {
-        if case .unmatched = parseQuery(transcript) {
-            // Expected
-        } else {
-            Issue.record("Expected .unmatched for '\(transcript)'")
+    @Test("Decodes a clarification for playback")
+    func clarificationReply() throws {
+        let reply = #"{"kind":"clarify","message":" Which gate number? "}"#
+        guard case .clarify(let message) = try decodeConversationReply(reply) else {
+            Issue.record("Expected a clarification")
+            return
         }
+        #expect(message == "Which gate number?")
     }
 
-    // MARK: - Strict LLM Output Parsing (parseLLMReply)
-
-    @Test("Parses valid constrained LLM labels")
-    func validLLMReplies() {
-        #expect(parseLLMReply("washroom")?.label == .washroom)
-        #expect(parseLLMReply("restaurant")?.label == .restaurant)
-
-        let gate1 = parseLLMReply("gate 1")
-        #expect(gate1?.label == .gate)
-        #expect(gate1?.requestedGateID == 1)
-
-        let gate4 = parseLLMReply("Gate 4.")
-        #expect(gate4?.label == .gate)
-        #expect(gate4?.requestedGateID == 4)
-
-        let gate6 = parseLLMReply("gate 6")
-        #expect(gate6?.label == .gate)
-        #expect(gate6?.requestedGateID == 6)
-    }
-
-    @Test("Rejects 'none' or verbose LLM replies without false positives", arguments: [
-        "none",
-        "gate",
-        "gate 9",
-        "The label is none, not washroom"
+    @Test("Invalid model output throws one response error", arguments: [
+        "{", "{}",
+        #"{"kind":"unknown"}"#,
+        #"{"kind":"clarify"}"#,
+        #"{"kind":"clarify","message":"   "}"#,
+        #"{"kind":"ready","label":"luggage"}"#,
+        #"{"kind":"ready","label":"gate"}"#,
+        #"{"kind":"ready","label":"gate","gateID":0}"#,
+        #"{"kind":"ready","label":"gate","gateID":7}"#,
+        #"{"kind":"ready","label":"gate","gateID":"five"}"#,
+        #"{"kind":"ready","label":"washroom","gateID":2}"#
     ])
-    func rejectedLLMReplies(reply: String) {
-        #expect(parseLLMReply(reply) == nil)
+    func invalidReplies(reply: String) {
+        #expect(throws: ConversationError.self) { try decodeConversationReply(reply) }
+    }
+
+    @Test("Scripted conversations order capture, model replies, and playback", arguments: [
+        (["find a washroom"], [#"{"kind":"ready","label":"washroom"}"#], SignLabel.washroom, Optional<Int>.none),
+        (["I need help", "A gate", "Five"], [
+            #"{"kind":"clarify","message":"Which destination?"}"#,
+            #"{"kind":"clarify","message":"Which gate number?"}"#,
+            #"{"kind":"ready","label":"gate","gateID":5}"#
+        ], .gate, 5)
+    ])
+    @MainActor
+    func scriptedConversation(utterances: [String], replies: [String], label: SignLabel, gateID: Int?) async throws {
+        var captured = 0
+        var responded = 0
+        var spoken = 0
+        let query = try await resolveQueryConversation(
+            capture: {
+                #expect(responded == captured)
+                #expect(spoken == captured)
+                let utterance = try #require(utterances.dropFirst(captured).first)
+                captured += 1
+                return utterance
+            },
+            respond: { utterance in
+                #expect(utterance == utterances[responded])
+                let reply = try #require(replies.dropFirst(responded).first)
+                responded += 1
+                return reply
+            },
+            speak: { message in
+                guard case .clarify(let expected) = try decodeConversationReply(replies[responded - 1]) else {
+                    Issue.record("Only clarifications should be spoken")
+                    return
+                }
+                #expect(message == expected)
+                spoken += 1
+            }
+        )
+        #expect(captured == utterances.count)
+        #expect(responded == replies.count)
+        #expect(spoken == replies.count - 1)
+        #expect(query.label == label)
+        #expect(query.requestedGateID == gateID)
+    }
+
+    @Test("Silence skips the model and does not repeat a clarification")
+    @MainActor
+    func conversationSilence() async throws {
+        var utterances = [" ", "I need a gate", "", " \n ", " Five "]
+        var heard: [String] = []
+        var questions: [String] = []
+        let query = try await resolveQueryConversation(
+            capture: { try #require(utterances.isEmpty ? nil : utterances.removeFirst()) },
+            respond: { utterance in
+                heard.append(utterance)
+                return heard.count == 1
+                    ? #"{"kind":"clarify","message":"Which gate number?"}"#
+                    : #"{"kind":"ready","label":"gate","gateID":5}"#
+            },
+            speak: { questions.append($0) }
+        )
+        #expect(heard == ["I need a gate", "Five"])
+        #expect(questions == ["Which gate number?"])
+        #expect(query.requestedGateID == 5)
+    }
+
+    @Test("Invalid replies end the conversation without another capture or playback")
+    @MainActor
+    func invalidConversationReply() async {
+        var captures = 0
+        await #expect(throws: ConversationError.self) {
+            try await resolveQueryConversation(
+                capture: { captures += 1; return "Find a gate" },
+                respond: { _ in "gate" },
+                speak: { _ in Issue.record("Invalid output must not be spoken") }
+            )
+        }
+        #expect(captures == 1)
+    }
+
+    @Test("The next utterance waits for clarification playback to finish")
+    @MainActor
+    func clarificationPlaybackOrdering() async throws {
+        let (started, signal) = AsyncStream<Void>.makeStream()
+        let (playback, completion) = AsyncStream<Void>.makeStream()
+        var captures = 0
+        let task = Task {
+            try await resolveQueryConversation(
+                capture: { captures += 1; return captures == 1 ? "A gate" : "Five" },
+                respond: { _ in
+                    captures == 1
+                        ? #"{"kind":"clarify","message":"Which gate number?"}"#
+                        : #"{"kind":"ready","label":"gate","gateID":5}"#
+                },
+                speak: { _ in
+                    signal.yield(())
+                    for await _ in playback {}
+                }
+            )
+        }
+        defer { task.cancel(); signal.finish(); completion.finish() }
+        for await _ in started { break }
+        #expect(captures == 1)
+        completion.finish()
+        let query = try await task.value
+        #expect(captures == 2)
+        #expect(query.requestedGateID == 5)
+    }
+
+    @Test("Cancellation stops each awaited conversation operation", arguments: ["capture", "respond", "speak"])
+    @MainActor
+    func conversationCancellation(stage: String) async throws {
+        let (started, continuation) = AsyncStream<Void>.makeStream()
+        var operations: [String] = []
+        let task = Task {
+            try await resolveQueryConversation(
+                capture: {
+                    operations.append("capture")
+                    if stage == "capture" {
+                        continuation.yield(())
+                        try await Task.sleep(for: .seconds(60))
+                    }
+                    return "A gate"
+                },
+                respond: { _ in
+                    operations.append("respond")
+                    if stage == "respond" {
+                        continuation.yield(())
+                        try await Task.sleep(for: .seconds(60))
+                    }
+                    return #"{"kind":"clarify","message":"Which gate number?"}"#
+                },
+                speak: { _ in
+                    operations.append("speak")
+                    continuation.yield(())
+                    try await Task.sleep(for: .seconds(60))
+                }
+            )
+        }
+        defer { task.cancel(); continuation.finish() }
+        for await _ in started { break }
+        task.cancel()
+        await #expect(throws: CancellationError.self) { try await task.value }
+        let expected = ["capture", "respond", "speak"]
+        #expect(operations == Array(expected.prefix(try #require(expected.firstIndex(of: stage)) + 1)))
+    }
+
+    @Test("Cancellation discards a model reply that arrives after cancellation")
+    @MainActor
+    func cancelledLateReply() async throws {
+        let (started, continuation) = AsyncStream<Void>.makeStream()
+        var response: CheckedContinuation<String, Never>?
+        let task = Task {
+            try await resolveQueryConversation(
+                capture: { "Gate five" },
+                respond: { _ in
+                    await withCheckedContinuation {
+                        response = $0
+                        continuation.yield(())
+                    }
+                },
+                speak: { _ in Issue.record("Cancelled output must not be spoken") }
+            )
+        }
+        defer { task.cancel(); continuation.finish() }
+        for await _ in started { break }
+        task.cancel()
+        try #require(response).resume(returning: #"{"kind":"ready","label":"gate","gateID":5}"#)
+        await #expect(throws: CancellationError.self) { try await task.value }
     }
 
     // MARK: - Adaptive Silence Timing (silenceDelay)
 
-    @Test("Uses 0.8s silence delay for complete queries and 2.0s for partial/unmatched")
-    func adaptiveSilenceTiming() {
-        #expect(silenceDelay(for: "where is the washroom") == 0.8)
-        #expect(silenceDelay(for: "find a restaurant") == 0.8)
-        #expect(silenceDelay(for: "gate 3") == 0.8)
-        #expect(silenceDelay(for: "gate 9") == 0.8)
-        #expect(silenceDelay(for: "where is gate") == 2.0)
-        #expect(silenceDelay(for: "I am starving") == 2.0)
+    @Test("Endpoint timing uses short pauses for recognized phrases and longer pauses for incomplete utterances", arguments: [
+        ("Where is the Washroom?", 0.8),
+        ("I need a restroom", 0.8),
+        ("Find a Restaurant, please!", 0.8),
+        ("gate three", 0.8),
+        ("gate to", 0.8),
+        ("gate 9", 0.8),
+        ("where is gate", 2.0),
+        ("I have 2 minutes to find a gate", 2.0),
+        ("I am starving", 2.0),
+        ("where is the washroom near gate 2", 2.0),
+        ("", 2.0)
+    ])
+    func adaptiveSilenceTiming(transcript: String, expected: TimeInterval) {
+        #expect(silenceDelay(for: transcript) == expected)
     }
 
     // MARK: - Feedback Formatting (formatFeedback)
