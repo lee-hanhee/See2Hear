@@ -39,8 +39,9 @@ func decodeConversationReply(_ text: String) throws -> ConversationReply {
     }
 }
 
-@MainActor
+// Inherit the caller's isolation so conversation state stays with its owning task or actor.
 func resolveQueryConversation(
+    isolation: isolated (any Actor)? = #isolation,
     capture: () async throws -> String,
     respond: (String) async throws -> String,
     speak: (String) async throws -> Void

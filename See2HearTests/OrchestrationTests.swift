@@ -225,6 +225,30 @@ struct OrchestrationTests {
         #expect(rig.coordinator.isEnabled)
     }
 
+    @Test("Orchestration waits for a complete language query before starting the search")
+    func waitsForCompleteQuery() async throws {
+        let rig = try RoundFixture(label: .washroom)
+        rig.language.delayQuery = true
+        rig.start()
+        defer {
+            rig.coordinator.stop()
+            rig.language.releaseQuery()
+        }
+        try await until { rig.language.queryIsPending }
+        #expect(rig.coordinator.phase == .listening)
+        #expect(rig.language.listenCount == 1)
+        #expect(rig.language.spoken.isEmpty)
+        #expect(await rig.vision.detectCount == 0)
+        #expect(rig.haptics.changes.allSatisfy { $0.strength == .off })
+
+        rig.language.delayQuery = false
+        rig.language.releaseQuery()
+        try await until { rig.language.listenCount == 2 }
+        #expect(rig.language.events.first == .searchStarted)
+        #expect(rig.language.spoken.first?.query.queryID == rig.query.queryID)
+        #expect(await rig.vision.detectCount > 0)
+    }
+
     @Test("Button Stop disables the session before delayed model work finishes")
     func stopDuringModelWork() async throws {
         let rig = try RoundFixture(label: .gate, requestedGate: 5)

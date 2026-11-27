@@ -10,7 +10,7 @@ protocol SpeechInterfacing {
     var isLoadingModel: Bool { get }
 
     /// Resolves one user request, including clarification turns within this call.
-    /// Keeps listening through silence until a complete query is resolved.
+    /// Waits through silence and clarification turns without a conversation timeout.
     /// Throw on failure or cancellation and release the microphone on exit.
     func listenForQuery() async throws -> SignQuery?
 
@@ -143,7 +143,12 @@ final class SpeechInterface: SpeechInterfacing {
     func listenForQuery() async throws -> SignQuery? {
         try await requestSpeechPermissions()
         try Task.checkCancellation()
+        return try await resolveConversation(instructions: Self.llmInstructions)
+    }
 
+    // Keep the mutable MLX session local to this asynchronous conversation.
+    // Only audio operations and model-loading UI state cross to the main actor.
+    private nonisolated func resolveConversation(instructions: String) async throws -> SignQuery {
         var conversation: ChatSession?
         defer { Memory.clearCache() }
         return try await resolveQueryConversation(
@@ -156,7 +161,7 @@ final class SpeechInterface: SpeechInterfacing {
                     let container = try await self.loadOrReuseModelContainer(announceLoading: true)
                     session = ChatSession(
                         container,
-                        instructions: Self.llmInstructions,
+                        instructions: instructions,
                         generateParameters: GenerateParameters(maxTokens: 256, temperature: 0.0)
                     )
                     conversation = session
