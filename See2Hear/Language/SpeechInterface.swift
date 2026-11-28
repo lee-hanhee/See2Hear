@@ -5,9 +5,23 @@ import MLXLMCommon
 import Observation
 import Speech
 
+enum SpeechActivity {
+    case idle, listening, processing, speaking
+
+    var status: String {
+        switch self {
+        case .idle: "Preparing to listen"
+        case .listening: "Listening for your request"
+        case .processing: "Understanding your request"
+        case .speaking: "Speaking to you"
+        }
+    }
+}
+
 @MainActor
 protocol SpeechInterfacing {
     var isLoadingModel: Bool { get }
+    var activity: SpeechActivity { get }
     /// The live transcript of the current or most recent utterance, for on-screen display.
     var heardText: String { get }
 
@@ -35,89 +49,19 @@ enum SpeechError: LocalizedError {
 
 @Observable
 final class SpeechInterface: SpeechInterfacing {
-    static let defaultModelID = "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+    static let defaultModelID = "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
     private static let mlxCacheLimitBytes = 20 * 1024 * 1024
 
     private static let llmInstructions = """
-    You help an airport passenger choose a destination for a sign-search application.
-
-    Supported destinations:
-    - washroom
-    - restaurant
-    - gate with a number from 1 through 6
-
-    Your job is to resolve one complete destination request through conversation.
-    You do not search for signs, provide navigation, or look up flight information.
-
-    Use the passenger's messages and the earlier conversation to understand their
-    request. A short answer may supply information you asked for previously.
-    Honor corrections and changes of destination. Do not keep information that
-    the passenger has replaced or contradicted.
-
-    Rules:
-    - A washroom or restaurant request is complete when the intended destination
-      is clear.
-    - A gate request is complete only when the passenger has explicitly supplied
-      a gate number from 1 through 6, either now or in an earlier message.
-    - Understand gate numbers expressed as digits or words.
-    - Never invent a gate number or infer it from a flight number, time, or
-      unrelated number.
-    - If the passenger wants a gate but has not supplied its number, ask which
-      gate number they need.
-    - If the request is vague or has multiple possible destinations, ask one
-      short question to resolve it.
-    - If the destination is unsupported, briefly explain the supported choices
-      and ask what the passenger wants.
-    - If the passenger requests flight information, explain that you can help
-      find a gate sign but need their gate number.
-    - Do not claim that you have found a sign or know its location.
-    - Do not ask for confirmation once the request is complete.
-
-    Return exactly one JSON object using one of these forms:
-
-    For a clarification:
-    {"kind":"clarify","message":"One short spoken question, with a brief explanation if needed."}
-
-    For a completed washroom request:
-    {"kind":"ready","label":"washroom"}
-
-    For a completed restaurant request:
-    {"kind":"ready","label":"restaurant"}
-
-    For a completed gate request:
-    {"kind":"ready","label":"gate","gateID":5}
-
-    Output requirements:
-    - Return JSON only, without Markdown, code fences, or surrounding text.
-    - Use only the fields shown for the selected form.
-    - The clarification message must be nonempty and suitable for speaking aloud.
-    - The ready label must be "washroom", "restaurant", or "gate".
-    - gateID must be an integer from 1 through 6 for a gate.
-    - Omit gateID for washroom and restaurant requests.
-
-    Examples:
-
-    Passenger: I need my flight.
-    Reply: {"kind":"clarify","message":"Which gate number are you looking for?"}
-    Passenger: Five.
-    Reply: {"kind":"ready","label":"gate","gateID":5}
-
-    Passenger: Find a bathroom.
-    Reply: {"kind":"ready","label":"washroom"}
-
-    Passenger: I want somewhere to eat.
-    Reply: {"kind":"ready","label":"restaurant"}
-
-    Passenger: Find gate seven.
-    Reply: {"kind":"clarify","message":"I can help with gates 1 through 6. Which supported destination would you like?"}
-
-    Passenger: I need help.
-    Reply: {"kind":"clarify","message":"Are you looking for a washroom, a restaurant, or a gate?"}
-
-    Passenger: A restaurant or maybe a washroom.
-    Reply: {"kind":"clarify","message":"Which would you like to find first, a restaurant or a washroom?"}
-    Passenger: Actually, gate three.
-    Reply: {"kind":"ready","label":"gate","gateID":3}
+    You help airport passengers find a washroom, a restaurant, or a gate numbered 1 through 6.
+    Reply with one JSON object only.
+    For a washroom or bathroom request, reply {"kind":"ready","label":"washroom"}.
+    For a restaurant or food request, reply {"kind":"ready","label":"restaurant"}.
+    For a gate request with a number, reply {"kind":"ready","label":"gate","gateID":1}, using the number the passenger gave.
+    If a gate number is missing, reply {"kind":"clarify","message":"Which gate number?"}.
+    If the request is unclear or unsupported, reply {"kind":"clarify","message":"Would you like a washroom, a restaurant, or a gate from 1 to 6?"}.
+    Remember the conversation. Use a short answer to fill in missing information. Honor corrections.
+    A washroom or restaurant request is already complete. Answer the passenger's actual request.
     """
 
     private let locale: Locale
@@ -128,6 +72,7 @@ final class SpeechInterface: SpeechInterfacing {
     private var activeSpeakSession: SpeakSession?
     private(set) var isLoadingModel = false
     private(set) var heardText = ""
+    private(set) var activity: SpeechActivity = .idle
 
     init(
         locale: Locale = Locale(identifier: "en-US"),
@@ -144,34 +89,33 @@ final class SpeechInterface: SpeechInterfacing {
     }
 
     func listenForQuery() async throws -> SignQuery? {
+        defer { activity = .idle }
         try await requestSpeechPermissions()
         try Task.checkCancellation()
         return try await resolveConversation(instructions: Self.llmInstructions)
     }
 
-    // Keep the mutable MLX session local to this asynchronous conversation.
-    // Only audio operations and model-loading UI state cross to the main actor.
+    // Keep conversation history local and apply the chat template to all turns together.
+    // Reuse the model weights while rebuilding each turn's context from explicit messages.
     private nonisolated func resolveConversation(instructions: String) async throws -> SignQuery {
-        var conversation: ChatSession?
+        var history: [Chat.Message] = []
         defer { Memory.clearCache() }
         return try await resolveQueryConversation(
             capture: { try await self.listenToUtterance() },
             respond: { utterance in
-                let session: ChatSession
-                if let conversation {
-                    session = conversation
-                } else {
-                    let container = try await self.loadOrReuseModelContainer(announceLoading: true)
-                    session = ChatSession(
-                        container,
-                        instructions: instructions,
-                        generateParameters: GenerateParameters(maxTokens: 256, temperature: 0.0)
-                    )
-                    conversation = session
-                }
+                let container = try await self.loadOrReuseModelContainer(announceLoading: true)
+                let session = ChatSession(
+                    container,
+                    instructions: instructions,
+                    history: history,
+                    generateParameters: GenerateParameters(maxTokens: 256, temperature: 0.0)
+                )
+                await MainActor.run { self.activity = .processing }
                 do {
                     let reply = try await session.respond(to: utterance)
                     await session.synchronize()
+                    history.append(.user(utterance))
+                    history.append(.assistant(reply))
                     return reply
                 } catch {
                     await session.synchronize()
@@ -188,6 +132,7 @@ final class SpeechInterface: SpeechInterfacing {
         }
 
         heardText = ""
+        activity = .listening
         let session = ListenSession(recognizer: recognizer, listeningHaptics: listeningHaptics) { text in
             Task { @MainActor [weak self] in self?.heardText = text }
         }
@@ -206,6 +151,8 @@ final class SpeechInterface: SpeechInterfacing {
     }
 
     private func speakText(_ text: String) async throws {
+        activity = .speaking
+        defer { activity = .idle }
         let session = SpeakSession()
         activeSpeakSession = session
         defer { activeSpeakSession = nil }
