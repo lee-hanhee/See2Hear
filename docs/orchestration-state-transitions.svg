@@ -1,32 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 2750" width="1480" height="2750" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 3400" width="1480" height="3400" role="img" aria-labelledby="title desc">
 <title id="title">See2Hear orchestration state transitions</title>
-<desc id="desc">Search rounds with UI Start/Stop, multi-turn clarification, model-loading feedback, five-frame voting, gate retries, and wrong-gate suppression.</desc>
+<desc id="desc">The eight SearchCoordinator phases and their transitions, followed by detailed search, language, voting, cancellation, and recovery flows. Listening includes the complete multi-turn conversation.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#435e71"/></marker></defs>
 <style>text {font-family: Inter,Arial,sans-serif;fill:#19334a} .small {font-size:15px} .edge {fill:none;stroke:#435e71;stroke-width:1.8;stroke-linejoin:round;marker-end:url(#arrow)} </style>
 <rect width="100%" height="100%" fill="#f5f7f7"/>
 <text x="40" y="56" text-anchor="start" style="font-size:38px;font-weight:650;fill:#19334a">See2Hear orchestration</text>
 <text x="41" y="91" text-anchor="start" style="font-size:22px;font-weight:400;fill:#405b69">Search transitions, spoken feedback, and UI-controlled sessions</text>
 <rect x="42" y="119" width="235" height="31" rx="5" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="53" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Existing subsystem behavior</text>
+<text x="53" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Subsystem operation</text>
 <rect x="291" y="119" width="288" height="31" rx="5" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
-<text x="302" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">New coordinator / capture behavior</text>
+<text x="302" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Coordinator / capture operation</text>
 <rect x="593" y="119" width="246" height="31" rx="5" fill="#fff1df" stroke="#cf9a57" stroke-width="1.4"/>
-<text x="604" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Language gap or open TODO</text>
+<text x="604" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Open implementation issue</text>
 <rect x="853" y="119" width="275" height="31" rx="5" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="864" y="140" text-anchor="start" style="font-size:15px;font-weight:650;fill:#19334a">Destination in another panel</text>
+<g id="coordinator-phases">
+<rect x="28" y="173" width="1424" height="626" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
+<text x="52" y="211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">Coordinator phases</text>
+<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#19334a">State names match SearchCoordinator.Phase. Each search round starts by awaiting one complete language query.</text>
+<rect x="55" y="310" width="235" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="335" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">stopped</text>
+<text x="68" y="359" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Session starts disabled.</text>
+<text x="68" y="380" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Wait for the Start button.</text>
+<rect x="365" y="310" width="220" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="378" y="335" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">starting</text>
+<text x="378" y="359" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Enable the session.</text>
+<text x="378" y="380" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Start camera capture.</text>
+<rect x="670" y="310" width="330" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="683" y="335" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">listening</text>
+<text x="683" y="359" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await the complete conversation.</text>
+<text x="683" y="380" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clarify for as many turns as needed.</text>
+<rect x="1140" y="310" width="255" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="1153" y="335" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">speaking</text>
+<text x="1153" y="359" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Play a search announcement.</text>
+<text x="1153" y="380" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Continue when playback ends.</text>
+<rect x="55" y="515" width="235" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="68" y="540" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">stopping</text>
+<text x="68" y="564" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Cancel work and stop haptics.</text>
+<text x="68" y="585" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await session cleanup.</text>
+<rect x="365" y="515" width="220" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="378" y="540" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">suspended(reason)</text>
+<text x="378" y="564" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Session remains enabled.</text>
+<text x="378" y="585" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Wait for Start or recovery.</text>
+<rect x="670" y="515" width="330" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="683" y="540" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">searching</text>
+<text x="683" y="564" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Detect and track an eligible sign.</text>
+<text x="683" y="585" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Use low haptics while guiding.</text>
+<rect x="1140" y="515" width="255" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
+<text x="1153" y="540" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">reading</text>
+<text x="1153" y="564" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Read five fresh frames.</text>
+<text x="1153" y="585" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Run the 2 s high pulse.</text>
+<path class="edge" d="M290 354 L365 354"/>
+<text x="327" y="340" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">Start</text>
+<path class="edge" d="M585 354 L670 354"/>
+<text x="627" y="340" text-anchor="middle" style="font-size:13px;font-weight:400;fill:#19334a">camera ready</text>
+<path class="edge" d="M1000 354 L1140 354"/>
+<text x="1070" y="340" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">complete query</text>
+<path class="edge" d="M1260 310 L1260 275 L835 275 L835 310"/>
+<text x="1048" y="266" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">result or final failure spoken</text>
+<path class="edge" d="M1180 402 L1180 460 L835 460 L835 515"/>
+<text x="990" y="449" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">start / reminder / lost sign / wrong gate</text>
+<path class="edge" d="M1310 402 L1310 515"/>
+<text x="1345" y="480" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">retry</text>
+<path class="edge" d="M1000 553 L1140 553"/>
+<text x="1070" y="537" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">stable center</text>
+<path class="edge" d="M1395 553 L1425 553 L1425 354 L1395 354"/>
+<text x="1145" y="632" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">Read outcome → announcement</text>
+<text x="670" y="632" style="font-size:14px;fill:#19334a">Scanning → reminder → scanning every 10 s.</text>
+<path class="edge" d="M100 515 L100 402"/>
+<text x="113" y="453" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">cleanup</text>
+<text x="113" y="473" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">without a reason</text>
+<path class="edge" d="M290 553 L365 553"/>
+<text x="327" y="537" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#19334a">reason</text>
+<path class="edge" d="M475 515 L475 402"/>
+<text x="488" y="448" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">Start /</text>
+<text x="488" y="468" text-anchor="start" style="font-size:14px;font-weight:400;fill:#19334a">resume</text>
+<text x="55" y="674" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Stop, backgrounding, interruption, or a fatal error enters stopping from any active phase.</text>
+<text x="55" y="701" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Button Stop clears isEnabled. Interruption and fatal errors retain it. Cleanup selects stopped or suspended(reason).</text>
+<text x="55" y="728" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Round cancellation and recoverable search errors return to listening. Each completed round begins a fresh conversation.</text>
+<text x="55" y="755" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Recovery requires an enabled session and available resources. A recovery request during stopping waits for cleanup.</text>
+<text x="55" y="782" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Clarification speech and model loading remain within listening. The speaking phase handles coordinator-issued search feedback.</text>
+</g>
+<g id="operation-details" transform="translate(0 650)">
 <rect x="28" y="173" width="1424" height="412" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">A. Listen and acquire a target</text>
-<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">UI Start enables the session. Await Language clarification, then search. The full-screen Stop button cancels active work.</text>
+<text x="52" y="239" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Await a complete query, then search. Every 10 s, announce stillSearching at a frame boundary and resume after playback.</text>
 <rect x="55" y="285" width="235" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="68" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Listen for a query</text>
-<text x="68" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request → Language / Query.</text>
+<text x="68" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">listening · await query</text>
+<text x="68" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Call listenForQuery() once.</text>
 <text x="68" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await a complete query.</text>
 <rect x="360" y="285" width="240" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
-<text x="373" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Start a round</text>
+<text x="373" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">speaking · search start</text>
 <text x="373" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep the query ID and category.</text>
 <text x="373" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await search-start speech.</text>
 <rect x="673" y="285" width="260" height="92" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="686" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Detect on the latest frame</text>
+<text x="686" y="310" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">searching · detect</text>
 <text x="686" y="333" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Run the category detector.</text>
 <text x="686" y="354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Return ranked candidate boxes.</text>
 <rect x="1040" y="285" width="355" height="92" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
@@ -41,7 +109,7 @@
 <rect x="55" y="447" width="235" height="88" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="68" y="472" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Clarify inside Language</text>
 <text x="68" y="495" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Ask, speak, and listen again.</text>
-<text x="68" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Silence keeps the conversation.</text>
+<text x="68" y="516" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">No turn limit or timeout.</text>
 <path class="edge" d="M122 377 L122 447"/>
 <text x="177" y="423" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">clarification / silence</text>
 <path class="edge" d="M55 492 L43 492 L43 330 L55 330"/>
@@ -60,12 +128,12 @@
 <text x="1295" y="419" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">stable center</text>
 <path class="edge" d="M1040 353 L986 353 L986 403 L875 403 L875 377"/>
 <text x="993" y="429" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">otherwise: next frame</text>
-<text x="56" y="565" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Center rule from the Python reference: box center inside the middle 24% on each axis, box overlap (IoU) ≥ 0.40, and successive observations ≤ 0.5 s apart.</text>
+<text x="56" y="565" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Centering requires the box center inside the middle 24% on each axis, box overlap (IoU) ≥ 0.40, and successive observations ≤ 0.5 s apart.</text>
 <rect x="28" y="609" width="1424" height="540" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="647" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">B. Read five fresh frames while the two-second pulse runs</text>
 <text x="52" y="675" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Start the two branches together for each attempt. Once one branch finishes, it waits for the other. Cancel or interruption preempts both.</text>
 <rect x="54" y="769" width="205" height="103" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
-<text x="67" y="794" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Begin attempt</text>
+<text x="67" y="794" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">reading · attempt</text>
 <text x="67" y="817" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Clear this frame batch.</text>
 <text x="67" y="838" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Keep the candidate track.</text>
 <rect x="345" y="714" width="235" height="83" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
@@ -106,7 +174,7 @@
 <text x="1083" y="783" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Choose the speech or search action.</text>
 <path class="edge" d="M935 756 L1070 756"/>
 <path class="edge" d="M1230 867 L1230 797"/>
-<text x="54" y="1064" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Track identity matters: a different screen entering the box cannot contribute a vote for the original candidate. A retry uses five new frames.</text>
+<text x="54" y="1064" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Track matching uses box overlap (IoU ≥ 0.40). After speech, re-anchor without the 0.5 s age limit. Every retry uses five new frames.</text>
 <text x="54" y="1097" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Compare raw gate digits before filtering on the requested ID. For a gate, take distance votes only from frames supporting the winning digit.</text>
 <rect x="28" y="1173" width="1424" height="500" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="1211" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">C. Select the announcement and wait for playback</text>
@@ -189,7 +257,7 @@
 <text x="1049" y="1854" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stopped until the user presses Start.</text>
 <rect x="1036" y="1894" width="355" height="67" rx="9" fill="#edf2fc" stroke="#8aa3cd" stroke-width="1.4"/>
 <text x="1049" y="1919" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Suspended</text>
-<text x="1049" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Stop capture; wait for foreground and access.</text>
+<text x="1049" y="1942" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Use Start or automatic recovery.</text>
 <path class="edge" d="M414 1840 L509 1840"/>
 <path class="edge" d="M414 1928 L509 1928"/>
 <path class="edge" d="M907 1840 L1036 1840"/>
@@ -197,23 +265,23 @@
 <path class="edge" d="M907 1928 L1036 1928"/>
 <text x="971" y="1915" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">interrupted</text>
 
-<text x="54" y="2003" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Resume only if enabled and resources are ready. TODO: defer recovery received during cleanup until stopping completes.</text>
-<text x="54" y="2030" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Proposed fault policy: abort on a one-round failure; enter Suspended if the required resource remains unavailable. Never replay a stale result or prompt.</text>
+<text x="54" y="2003" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Resume only if enabled and resources are ready. Recovery requested during cleanup resumes the session after stopping completes.</text>
+<text x="54" y="2030" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Errors while listening or unavailable resources → stopping → suspended. Other round errors → listening. See recovery details above.</text>
 <text x="42" y="2093" text-anchor="start" style="font-size:19px;font-weight:650;fill:#19334a">Other branches and ownership</text>
 <text x="42" y="2121" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Fewer than 3 matched frames: announce lost sight, reset attempts, and reacquire. No distance majority → pass nil.</text>
 <text x="42" y="2147" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Vision supplies per-frame predictions; Orchestration owns tracking, batches, votes, timers and routing. Haptic already supports off, low and high.</text>
 <rect x="28" y="2182" width="1424" height="510" rx="12" fill="#ffffff" stroke="#d6e0e2" stroke-width="1.4"/>
 <text x="52" y="2220" text-anchor="start" style="font-size:26px;font-weight:650;fill:#19334a">Language detail · calls from A and C</text>
-<text x="52" y="2248" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Language owns clarification and model loading. Orchestration awaits a complete query and supplies search announcements.</text>
+<text x="52" y="2248" text-anchor="start" style="font-size:17px;font-weight:400;fill:#405b69">Phase stays listening during capture, model loading, inference, and clarification speech. A complete query releases the await.</text>
 <rect x="55" y="2306" width="210" height="95" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="68" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">A · Listening</text>
-<text x="68" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Request one query.</text>
+<text x="68" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Await listenForQuery().</text>
 <rect x="315" y="2306" width="240" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="328" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Capture one utterance</text>
 <text x="328" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Transcribe until final text</text>
 <text x="328" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Silence → capture again.</text>
 <rect x="610" y="2306" width="242" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
-<text x="623" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Qwen · same session</text>
+<text x="623" y="2331" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Qwen · message history</text>
 <text x="623" y="2354" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Every nonempty utterance.</text>
 <text x="623" y="2375" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Retain context across turns.</text>
 <rect x="908" y="2306" width="220" height="95" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
@@ -229,7 +297,7 @@
 <path class="edge" d="M852 2355 L908 2355"/>
 <path class="edge" d="M1128 2355 L1180 2355"/>
 <path class="edge" d="M1018 2306 L1018 2284 L435 2284 L435 2306"/>
-<text x="737" y="2278" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">clarify → speak → capture (same ChatSession)</text>
+<text x="737" y="2278" text-anchor="middle" style="font-size:14px;font-weight:400;fill:#435e71">clarify → speak → capture (retain conversation history)</text>
 <rect x="55" y="2440" width="290" height="85" rx="9" fill="#f5f7f8" stroke="#a3afb8" stroke-width="1.4"/>
 <text x="68" y="2465" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">First uncached model use</text>
 <text x="68" y="2488" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Loading starts inside Language.</text>
@@ -249,8 +317,8 @@
 <text x="68" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Send feedback for this outcome.</text>
 <rect x="415" y="2558" width="284" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="428" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Format feedback</text>
-<text x="428" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Search start, loss, wrong gate,</text>
-<text x="428" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">retry, failure, and recognition.</text>
+<text x="428" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Start, still searching, wrong gate,</text>
+<text x="428" y="2627" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">loss, retry, failure, recognition.</text>
 <rect x="755" y="2558" width="238" height="85" rx="9" fill="#e4f3ef" stroke="#7aaca0" stroke-width="1.4"/>
 <text x="768" y="2583" text-anchor="start" style="font-size:17px;font-weight:650;fill:#19334a">Playback · Speak</text>
 <text x="768" y="2606" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Synthesize speech and</text>
@@ -262,6 +330,7 @@
 <path class="edge" d="M345 2600 L415 2600"/>
 <path class="edge" d="M699 2600 L755 2600"/>
 <path class="edge" d="M993 2600 L1050 2600"/>
-<text x="54" y="2675" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">The UI Stop button cancels speech, microphone capture, and model work. Stopping remains visible until cleanup finishes.</text>
+<text x="54" y="2675" text-anchor="start" style="font-size:16px;font-weight:400;fill:#19334a">Language status shows listening, understanding, or speaking. Each model turn uses the full message history. Stop awaits cleanup.</text>
 <text x="42" y="2724" text-anchor="start" style="font-size:15px;font-weight:400;fill:#19334a">Three attempts per candidate; fresh votes per attempt. Re-anchor after speech. Wrong gates stay suppressed while visible.</text>
+</g>
 </svg>

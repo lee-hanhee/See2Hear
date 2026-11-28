@@ -29,9 +29,18 @@ func decodeConversationReply(_ text: String) throws -> ConversationReply {
         }
         return .clarify(message)
     case "ready":
-        guard let label = reply.label.flatMap(SignLabel.init(rawValue:)),
-              let query = SignQuery(queryID: UUID(), label: label, requestedGateID: reply.gateID) else {
+        guard let label = reply.label.flatMap(SignLabel.init(rawValue:)) else {
             throw ConversationError.invalidResponse
+        }
+        guard let query = SignQuery(queryID: UUID(), label: label, requestedGateID: reply.gateID) else {
+            switch label {
+            case .gate:
+                return .clarify(reply.gateID == nil
+                    ? "Which gate number are you looking for?"
+                    : "I can help with gates 1 through 6. Which supported destination would you like?")
+            case .washroom, .restaurant:
+                throw ConversationError.invalidResponse
+            }
         }
         return .ready(query)
     default:

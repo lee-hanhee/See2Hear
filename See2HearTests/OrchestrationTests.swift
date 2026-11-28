@@ -5,6 +5,79 @@ import Testing
 
 @MainActor
 struct OrchestrationTests {
+    @Test("Language activity distinguishes processing and clarification from microphone capture")
+    func languageActivityStatus() throws {
+        let rig = try RoundFixture(label: .washroom)
+        #expect(rig.coordinator.listeningStatus == "Listening for your request")
+        rig.language.activity = .processing
+        #expect(rig.coordinator.listeningStatus == "Understanding your request")
+        rig.language.activity = .speaking
+        #expect(rig.coordinator.listeningStatus == "Speaking to you")
+        rig.language.isLoadingModel = true
+        #expect(rig.coordinator.listeningStatus == "Loading model…")
+    }
+
+    @Test("Long searches repeat reminders and then read the acquired sign")
+    func searchReminders() async throws {
+        let scan = StreamScript(delivery: .latest, frames:
+            Array(repeating: FramePrediction(boxes: [], detectionDelay: .milliseconds(35)), count: 4)
+            + Array(repeating: FramePrediction(boxes: [box(30)]), count: 3))
+        let rig = try RoundFixture(label: .washroom, scripts: [scan, .read()],
+                                   searchReminderInterval: .milliseconds(50))
+        rig.start()
+        defer { rig.coordinator.stop() }
+        try await until { rig.language.listenCount == 2 }
+        #expect(rig.language.events == [
+            .searchStarted, .stillSearching, .stillSearching,
+            .recognized(arrowDirection: nil, distanceToSign: nil)
+        ])
+        #expect(rig.language.spoken.allSatisfy { $0.query.queryID == rig.query.queryID })
+        #expect(rig.camera.batchTimes.count == 1)
+    }
+
+    @Test("Reminder playback pauses scanning and supports resumption, stop, interruption, and round cancellation",
+          arguments: ["resume", "stop", "interrupt", "round"])
+    func searchReminderPlayback(action: String) async throws {
+        let scan = StreamScript(delivery: .latest, frames: [
+            FramePrediction(boxes: [box(30)], detectionDelay: .milliseconds(60)),
+            FramePrediction(boxes: [box(30)]), FramePrediction(boxes: [box(30)]), FramePrediction(boxes: [box(30)])
+        ])
+        let rig = try RoundFixture(label: .washroom, scripts: [scan, .read()],
+                                   searchReminderInterval: .milliseconds(50))
+        rig.language.heldEvent = .stillSearching
+        rig.start()
+        defer { rig.coordinator.stop() }
+        try await until { rig.language.events.last == .stillSearching }
+        #expect(rig.coordinator.phase == .speaking)
+        #expect(rig.haptics.changes.last?.strength == .off)
+        try await Task.sleep(for: .milliseconds(120))
+        #expect(await rig.vision.detectCount == 1)
+        #expect(rig.language.events == [.searchStarted, .stillSearching])
+        switch action {
+        case "resume":
+            rig.language.heldEvent = nil
+            rig.language.releasePlayback()
+            try await until { rig.language.listenCount == 2 }
+            #expect(rig.language.events == [
+                .searchStarted, .stillSearching, .recognized(arrowDirection: nil, distanceToSign: nil)
+            ])
+            #expect(rig.camera.batchTimes.count == 1)
+            return
+        case "round":
+            rig.coordinator.cancelRound()
+            try await until { rig.language.listenCount == 2 }
+        case "interrupt":
+            rig.coordinator.stop(reason: "Interrupted")
+            try await until { rig.coordinator.phase == .suspended("Interrupted") }
+        default:
+            rig.coordinator.stop()
+            try await until { rig.coordinator.phase == .stopped }
+        }
+        #expect(rig.language.playbackWasCancelled)
+        #expect(rig.camera.batchTimes.isEmpty)
+        #expect(rig.language.events == [.searchStarted, .stillSearching])
+    }
+
     @Test("Search start precedes detection; result playback follows five fresh frames and the pulse")
     func successfulRound() async throws {
         let rig = try RoundFixture(label: .washroom)
@@ -363,6 +436,7 @@ private struct FramePrediction {
     var boxes: [SignBoundingBox]
     var reading: SignReading?
     var distance: SignDistanceBand = .near
+    var detectionDelay: Duration = .zero
 }
 
 private struct StreamScript {
@@ -447,11 +521,12 @@ private actor VisionFixture: VisionModelInvoking {
         pending = nil
     }
 
-    func detect(frame: CameraFrame, category: SignLabel) throws -> [SignBoundingBox] {
+    func detect(frame: CameraFrame, category: SignLabel) async throws -> [SignBoundingBox] {
         let prediction = try #require(predictions.first)
         predictions.removeFirst()
         current = prediction
         detectCount += 1
+        if prediction.detectionDelay > .zero { try await Task.sleep(for: prediction.detectionDelay) }
         return prediction.boxes
     }
 
@@ -472,6 +547,7 @@ private final class LanguageFixture: SpeechInterfacing {
     var invalidInput = false
     var heldEvent: SearchFeedbackEvent?
     var isLoadingModel = false
+    var activity: SpeechActivity = .listening
     var heardText = ""
     var events: [SearchFeedbackEvent] { spoken.map(\.event) }
     private var playback: AsyncStream<Void>.Continuation?
@@ -533,7 +609,7 @@ private struct RoundFixture {
     let pulse = Duration.milliseconds(50)
 
     init(label: SignLabel, requestedGate: Int? = nil, delayReaders: Bool = false,
-         scripts: [StreamScript]? = nil) throws {
+         scripts: [StreamScript]? = nil, searchReminderInterval: Duration = .seconds(10)) throws {
         query = try #require(SignQuery(queryID: UUID(), label: label, requestedGateID: requestedGate))
         language = LanguageFixture(query: query)
         let guidance = StreamScript(delivery: .latest, frames: [
@@ -549,7 +625,8 @@ private struct RoundFixture {
         let streams = scripts ?? [guidance, read]
         camera = try CameraFixture(scripts: streams)
         vision = VisionFixture(predictions: streams.flatMap(\.frames), delayReaders: delayReaders)
-        coordinator = SearchCoordinator(camera: camera, speech: language, vision: vision, haptics: haptics, pulseDuration: pulse)
+        coordinator = SearchCoordinator(camera: camera, speech: language, vision: vision, haptics: haptics,
+                                        pulseDuration: pulse, searchReminderInterval: searchReminderInterval)
     }
 
     func start() { coordinator.start() }

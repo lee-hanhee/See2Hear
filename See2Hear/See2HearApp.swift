@@ -49,7 +49,7 @@ private struct SearchView: View {
         switch coordinator.phase {
         case .stopped: "Ready for a new request"
         case .starting: "Starting"
-        case .listening: coordinator.isLoadingModel ? "Loading model…" : "Listening for your request"
+        case .listening: coordinator.listeningStatus
         case .searching: "Searching for the sign"
         case .reading: "Reading the sign"
         case .speaking: "Speaking the result"

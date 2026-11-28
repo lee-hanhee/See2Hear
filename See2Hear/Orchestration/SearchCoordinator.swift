@@ -14,6 +14,7 @@ final class SearchCoordinator {
     private(set) var isEnabled = false
     var isLoadingModel: Bool { speech.isLoadingModel }
     var heardText: String { speech.heardText }
+    var listeningStatus: String { speech.isLoadingModel ? "Loading model…" : speech.activity.status }
 
     /// Debug aid: what the detector found in the latest processed frame.
     struct ScanPreview {
@@ -31,16 +32,19 @@ final class SearchCoordinator {
     private let haptics: any HapticControlling
     private let logger = Logger(subsystem: "See2Hear", category: "Orchestration")
     private let pulseDuration: Duration
+    private let searchReminderInterval: Duration
     private var sessionTask: Task<Void, Never>?
     private var roundTask: Task<Void, Error>?
 
     init(camera: any FrameCapturing, speech: any SpeechInterfacing, vision: any VisionModelInvoking,
-         haptics: any HapticControlling, pulseDuration: Duration = .seconds(2)) {
+         haptics: any HapticControlling, pulseDuration: Duration = .seconds(2),
+         searchReminderInterval: Duration = .seconds(10)) {
         self.camera = camera
         self.speech = speech
         self.vision = vision
         self.haptics = haptics
         self.pulseDuration = pulseDuration
+        self.searchReminderInterval = searchReminderInterval
     }
 
     func start() {
@@ -187,6 +191,7 @@ final class SearchCoordinator {
 
     private func findCenteredSign(for query: SignQuery, rejected: inout RejectedSigns) async throws -> TrackedSign {
         var streak = CenteringStreak()
+        var nextReminder = ContinuousClock.now.advanced(by: searchReminderInterval)
         defer { camera.discardFrames() }
         for try await sample in camera.frames(.latest) {
             try Task.checkCancellation()
@@ -196,6 +201,18 @@ final class SearchCoordinator {
             scanPreview = ScanPreview(detections: boxes, target: box)
             if let target = streak.observe(box, at: sample.timestamp) { return target }
             haptics.apply(HapticFeedback(strength: box == nil ? .off : .low))
+            if ContinuousClock.now >= nextReminder {
+                let announcedAt = ContinuousClock.now
+                try await announce(.stillSearching, for: query)
+                try Task.checkCancellation()
+                phase = .searching
+                streak = CenteringStreak()
+                // Keep a ten-second cadence while skipping intervals occupied by long playback.
+                nextReminder = announcedAt.advanced(by: searchReminderInterval)
+                if nextReminder <= .now {
+                    nextReminder = .now.advanced(by: searchReminderInterval)
+                }
+            }
         }
         try Task.checkCancellation()
         throw CaptureError.unavailable

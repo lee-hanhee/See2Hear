@@ -3,6 +3,31 @@ import Testing
 @testable import See2Hear
 
 struct LanguageTests {
+    @Test("Duplicate speech results do not extend the utterance silence timer")
+    func repeatedSpeechResults() {
+        var transcript = UtteranceTranscript()
+        let first = transcript.update("I want to look for a restaurant")
+        #expect(first)
+        for _ in 0..<20 {
+            let changed = transcript.update("I want to look for a restaurant")
+            #expect(!changed)
+        }
+        #expect(transcript.text == "I want to look for a restaurant")
+    }
+
+    @Test("An empty final result preserves recognized words for the language model")
+    func emptyFinalSpeechResult() {
+        var transcript = UtteranceTranscript()
+        let first = transcript.update("To the washroom")
+        #expect(first)
+        let emptyFinal = transcript.update(" \n ")
+        #expect(!emptyFinal)
+        #expect(transcript.text == "To the washroom")
+        let correction = transcript.update("To the restaurant")
+        #expect(correction)
+        #expect(transcript.text == "To the restaurant")
+    }
+
 
     // MARK: - Query Contract
 
@@ -19,6 +44,19 @@ struct LanguageTests {
     }
 
     // MARK: - Conversation Replies
+
+    @Test("Incomplete or unsupported gate replies continue the conversation", arguments: [
+        #"{"kind":"ready","label":"gate"}"#,
+        #"{"kind":"ready","label":"gate","gateID":0}"#,
+        #"{"kind":"ready","label":"gate","gateID":7}"#
+    ])
+    func incompleteGateReply(reply: String) throws {
+        guard case .clarify(let message) = try decodeConversationReply(reply) else {
+            Issue.record("A supported gate number is required before searching")
+            return
+        }
+        #expect(!message.isEmpty)
+    }
 
     @Test("Decodes supported completed destinations", arguments: [
         (#"{"kind":"ready","label":"washroom"}"#, SignLabel.washroom, Optional<Int>.none),
@@ -51,9 +89,6 @@ struct LanguageTests {
         #"{"kind":"clarify"}"#,
         #"{"kind":"clarify","message":"   "}"#,
         #"{"kind":"ready","label":"luggage"}"#,
-        #"{"kind":"ready","label":"gate"}"#,
-        #"{"kind":"ready","label":"gate","gateID":0}"#,
-        #"{"kind":"ready","label":"gate","gateID":7}"#,
         #"{"kind":"ready","label":"gate","gateID":"five"}"#,
         #"{"kind":"ready","label":"washroom","gateID":2}"#
     ])

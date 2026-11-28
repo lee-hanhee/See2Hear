@@ -7,7 +7,7 @@ enum SearchFeedbackEvent: Equatable {
     /// Confirms the requested destination before searching.
     case searchStarted
 
-    /// The scan continues without a candidate in view.
+    /// The scan continues while waiting for a stable, centered candidate.
     case stillSearching
 
     /// The previously detected candidate needs to be reacquired.

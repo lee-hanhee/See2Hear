@@ -16,6 +16,18 @@ func requestSpeechPermissions() async throws {
     }
 }
 
+/// Keep the last usable transcript across repeated partial results and empty final results.
+struct UtteranceTranscript {
+    private(set) var text = ""
+
+    mutating func update(_ result: String) -> Bool {
+        let result = result.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !result.isEmpty, result != text else { return false }
+        text = result
+        return true
+    }
+}
+
 final class ListenSession: @unchecked Sendable {
     private let recognizer: SFSpeechRecognizer
     private let audioEngine = AVAudioEngine()
@@ -26,7 +38,7 @@ final class ListenSession: @unchecked Sendable {
     private var silenceTimerTask: Task<Void, Never>?
     private var maxDurationTask: Task<Void, Never>?
     private var continuation: CheckedContinuation<String, Error>?
-    private var latestTranscript = ""
+    private var transcript = UtteranceTranscript()
     private var isCompleted = false
 
     private let listeningHaptics: Bool
@@ -103,20 +115,24 @@ final class ListenSession: @unchecked Sendable {
                 if let result {
                     let text = result.bestTranscription.formattedString
                     self.lock.lock()
-                    self.latestTranscript = text
+                    guard !self.isCompleted else {
+                        self.lock.unlock()
+                        return
+                    }
+                    let changed = self.transcript.update(text)
                     self.lock.unlock()
-                    self.onTranscript(text)
+                    if changed { self.onTranscript(text) }
 
                     if result.isFinal {
                         self.finish()
                         return
                     }
-                    self.scheduleSilenceTimer(seconds: silenceDelay(for: text))
+                    if changed { self.scheduleSilenceTimer(seconds: silenceDelay(for: text)) }
                 }
 
                 if let error {
                     self.lock.lock()
-                    let hasTranscript = !self.latestTranscript.isEmpty
+                    let hasTranscript = !self.transcript.text.isEmpty
                     self.lock.unlock()
                     self.complete(with: hasTranscript ? nil : error)
                 }
@@ -151,7 +167,7 @@ final class ListenSession: @unchecked Sendable {
             return
         }
         isCompleted = true
-        let transcript = latestTranscript
+        let transcript = transcript.text
         let cont = continuation
         continuation = nil
         silenceTimerTask?.cancel()
